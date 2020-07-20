@@ -95,9 +95,9 @@ revigo_scatterplot <- function(data_dir) {
 
 convert_kid <- function(kid) {
 
-   if (!'type' %in% names(kid)) {
-     res <- kid
-   } else if (kid['type'] == 'ELLIPSE') {
+  if (!'type' %in% names(kid)) {
+    res <- kid
+  } else if (kid['type'] == 'ELLIPSE') {
     res <- c(kid['x'], kid['y'], kid['fill'])
     names(res) <- c('x', 'y', 'fill')
 
@@ -177,16 +177,55 @@ convert_xgmml <- function(xgmml_path) {
 #' scrape_revigo(data_dir, go_res)
 #' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
 #' data <- convert_xgmml(xgmml_path)
-#'
-#' r2d3::r2d3("inst/d3/forcegraph/forcegraph.js", data = data_to_json(data), d3_version = 4)
+#' data_to_json(data)
 #'
 data_to_json <- function(data) {
   jsonlite::toJSON(data,
-    dataframe = "rows", null = "null", na = "null", auto_unbox = TRUE,
-    digits = getOption("shiny.json.digits", 16), use_signif = TRUE, force = TRUE,
-    POSIXt = "ISO8601", UTC = TRUE, rownames = FALSE, keep_vec_names = TRUE,
-    json_verabitm = TRUE
+                   dataframe = "rows", null = "null", na = "null", auto_unbox = TRUE,
+                   digits = getOption("shiny.json.digits", 16), use_signif = TRUE, force = TRUE,
+                   POSIXt = "ISO8601", UTC = TRUE, rownames = FALSE, keep_vec_names = TRUE,
+                   json_verabitm = TRUE
   )
 }
 
+r2d3_forcegraph <- function(data_dir) {
+  xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
+  data <- convert_xgmml(xgmml_path)
+  data <- append_genes(data, data_dir)
 
+  r2d3::r2d3(system.file("d3/forcegraph/forcegraph.js", package = 'revigoR'), data = data_to_json(data), d3_version = 4)
+}
+
+#' Add gene names and logfc values to forcegraph data
+#'
+#' @param data result of \code{\link{convert_xgmml}}
+#' @param data_dir directory with scraped revigo data
+#'
+#' @return \code{data} with columes merged_genes and logfc added to nodes data.frame
+#' @export
+#'
+#' @examples
+append_genes <- function(data, data_dir) {
+
+  # read original RDS with gene names/logfc values
+  go_res <- readRDS(file.path(data_dir, 'go_res.rds'))
+
+  if (!all(c('genes', 'logfc') %in% colnames(go_res)))
+    stop("go_res supplied to scrape_revigo lacked columns 'genes' and/or 'logfc'")
+
+  # obtain revigo collapsed columns
+  revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1)
+  go_res$representative <- revigo_res[row.names(go_res), 'representative']
+
+  # merge to unique genes and associated logfc within revigo groups
+  go_merged <- go_res %>%
+    dplyr::group_by(representative) %>%
+    dplyr::summarize(merged_genes = list(unlist(genes)[!duplicated(unlist(genes))]),
+                     logfc = list(unlist(logfc)[!duplicated(unlist(genes))]),
+                     id = paste0('GO:', unique(representative))) %>%
+    dplyr::select(-representative)
+
+  data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
+
+  return(data)
+}

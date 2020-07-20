@@ -15,3 +15,11 @@ list of data.frames with nodes and links for forcegraph
 \description{
 Convert cytoscape xgmml to data.frames
 }
+\examples{
+data(go_res)
+data_dir <- tempdir()
+scrape_revigo(data_dir, go_res)
+xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
+data <- convert_xgmml(xgmml_path)
+
+}

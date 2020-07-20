@@ -1,14 +1,211 @@
 {
-  "nodes":
-  [
-    {"id":"GO:1901748","label":"leukotriene D4 metabolism","fill":"#ffc3c3"},
-    {"id":"GO:2274","label":"myeloid leukocyte activation","fill":"#ff0000"},
-    {"id":"GO:7249","label":"I-kappaB kinase/NF-kappaB signaling","fill":"#ffd0d0"},
-    {"id":"GO:72604","label":"interleukin-6 secretion","fill":"#ffc6c6"},
-    {"id":"GO:6751","label":"glutathione catabolism","fill":"#ffc3c3"}
-    ],
-  "links":[
-      {"target":"GO:1901748","source":"GO:6751","value":0.389},
-      {"target":"GO:2274","source":"GO:72604","value":0.104}
-    ]
+  "nodes": [
+    {
+      "id": "GO:1901748",
+      "label": "leukotriene D4 metabolism",
+      "fill": "#ffc3c3",
+      "merged_genes": [
+        "GGT1",
+        "GGT3P",
+        "GGT5",
+        "GGTLC2",
+        "GGTLC1",
+        "GGT2"
+      ],
+      "logfc": [
+        0.5,
+        0.4,
+        0.23,
+        0.51,
+        0.51,
+        0.51
+      ]
+    },
+    {
+      "id": "GO:2274",
+      "label": "myeloid leukocyte activation",
+      "fill": "#ff0000",
+      "merged_genes": [
+        "ADAM8",
+        "ALOX5",
+        "AMPD3",
+        "ANXA3",
+        "RHOG",
+        "CEACAM1",
+        "BST1",
+        "CBL",
+        "CD58",
+        "CD59",
+        "ANXA1",
+        "XIAP",
+        "APOA4",
+        "ARRB2",
+        "BCL3",
+        "BCL6",
+        "POLR3D",
+        "C4BPA",
+        "CD86",
+        "CD63",
+        "FCER1G",
+        "FFAR2",
+        "HCK",
+        "IRAK2",
+        "LYN",
+        "MUC3A",
+        "MYD88",
+        "NFKB1",
+        "NFKBIA",
+        "PAK2",
+        "PLCG2",
+        "PRKCD",
+        "PRKDC",
+        "RELA",
+        "RELB"
+      ],
+      "logfc": [
+        0.51,
+        0.91,
+        0.37,
+        1.4,
+        0.53,
+        1.1,
+        0.46,
+        0.67,
+        0.74,
+        0.97,
+        -0.64,
+        0.28,
+        0.21,
+        0.44,
+        0.77,
+        0.1,
+        -0.27,
+        2.03,
+        -0.7,
+        0.3,
+        0.34,
+        0.97,
+        0.55,
+        0.76,
+        0.54,
+        0.24,
+        0.33,
+        0.49,
+        0.6,
+        0.55,
+        0.49,
+        -0.31,
+        -0.31,
+        0.22,
+        0.75
+      ]
+    },
+    {
+      "id": "GO:7249",
+      "label": "I-kappaB kinase/NF-kappaB signaling",
+      "fill": "#ffd0d0",
+      "merged_genes": [
+        "BCL3",
+        "DDX1",
+        "IL1B",
+        "IL1RN",
+        "IRAK2",
+        "LTBR",
+        "MYD88",
+        "NFKBIA",
+        "RELA",
+        "RELB",
+        "ROCK1",
+        "SECTM1",
+        "TNFAIP3",
+        "TNFRSF1A",
+        "TRIM25",
+        "CFLAR",
+        "USP10"
+      ],
+      "logfc": [
+        0.77,
+        -0.37,
+        1.3,
+        0.78,
+        0.76,
+        0.48,
+        0.33,
+        0.6,
+        0.22,
+        0.75,
+        0.7,
+        0.6,
+        0.5,
+        0.38,
+        0.58,
+        0.71,
+        0.69
+      ]
+    },
+    {
+      "id": "GO:72604",
+      "label": "interleukin-6 secretion",
+      "fill": "#ffc6c6",
+      "merged_genes": [
+        "IL1B",
+        "IL1RAP",
+        "MBP",
+        "HYAL2",
+        "LILRA2",
+        "C5AR2",
+        "TLR8",
+        "ZC3H12A",
+        "IL17RC",
+        "NLRP10",
+        "LILRA5"
+      ],
+      "logfc": [
+        1.3,
+        0.85,
+        0.74,
+        0.44,
+        0.61,
+        -0.46,
+        0.73,
+        0.88,
+        0.3,
+        0.47,
+        0.75
+      ]
+    },
+    {
+      "id": "GO:6751",
+      "label": "glutathione catabolism",
+      "fill": "#ffc3c3",
+      "merged_genes": [
+        "GGT1",
+        "GGT3P",
+        "GGT5",
+        "GGTLC2",
+        "GGTLC1",
+        "GGT2"
+      ],
+      "logfc": [
+        0.5,
+        0.4,
+        0.23,
+        0.51,
+        0.51,
+        0.51
+      ]
+    }
+  ],
+  "links": [
+    {
+      "target": "GO:1901748",
+      "source": "GO:6751",
+      "value": 0.389
+    },
+    {
+      "target": "GO:2274",
+      "source": "GO:72604",
+      "value": 0.104
+    }
+  ]
 }

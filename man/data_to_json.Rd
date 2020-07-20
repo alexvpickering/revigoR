@@ -15,3 +15,12 @@ JSON objects
 \description{
 Format forcegraph data.frames to JSON
 }
+\examples{
+data(go_res)
+data_dir <- tempdir()
+scrape_revigo(data_dir, go_res)
+xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
+data <- convert_xgmml(xgmml_path)
+data_to_json(data)
+
+}

@@ -29,14 +29,12 @@ r2d3.onRender(function(graph, svg, width, height, options) {
 
 
   // containers for heatmap and its x-axis
-  var margin = {top: 30, right: 30, bottom: 30, left: 70},
-  heatWidth = 300 - margin.left - margin.right,
-  heatHeight = 350 - margin.top - margin.bottom;
+  var margin = {top: 10, right: 30, bottom: 10, left: 70},
+  heatWidth = 300 - margin.left - margin.right;
 
   svgHeat = tooltip
   .append("svg")
-    .attr("width", heatWidth + margin.left + margin.right)
-    .attr("height", heatHeight + margin.top + margin.bottom);
+    .attr("width", heatWidth + margin.left + margin.right);
 
   svgHeatG = svgHeat
   .append("g")
@@ -48,59 +46,83 @@ r2d3.onRender(function(graph, svg, width, height, options) {
 
   // Build Y scales and axis:
   var y = d3.scaleBand()
-    .range([ heatHeight, 0 ])
     .padding(0.01);
 
   // Build color scale
-  var myColor = d3.scaleLinear()
-    .range(["white", "#69b3a2"])
-    .domain([-200,200])
+  var palette = d3.scaleLinear().range(["green", "white", "red"]);
 
   // Three function that change the tooltip when user hover / move / leave a cell
   var mouseover = function(d) {
-    // add GO name to tooltip
-    tooltipTitle.html(d.label);
-
-    //Read the heatmap data
-    // TODO: make real data
-    data = [{"group": "IFNGR", "value": 30},
-            {"group": "IL1B", "value": 40},
-            {"group": "IL1A", "value": -40},
-            {"group": "TNFRSB", "value": -5},
-            {"group": "IFNA", "value": 1},
-            {"group": "IFNAR1", "value": -20},
-            {"group": "SOCS1", "value": 99}]
-
-
-    // update the y axis domain and redraw
-    var groups = data.map(item => item.group);
-    y.domain(groups);
-
-    yAxis.call(d3.axisLeft(y))
-
-    svgHeatG.selectAll()
-        .data(data, function(d) {return d.group;})
-        .enter()
-        .append("rect")
-        .attr("x", function(d) { return 1 })
-        .attr("y", function(d) { return y(d.group) })
-        .attr("width", y.bandwidth() )
-        .attr("height", y.bandwidth() )
-        .style("fill", function(d) { return myColor(d.value)} )
-
+    // show the tooltip
     tooltip
       .style("display", "block")
       .style("opacity", 1)
     d3.select(this)
       .style("stroke", "black")
       .style("opacity", 1)
-  };
+
+    // add GO name to tooltip
+    tooltipTitle.html(d.label);
+
+    // format the heatmap data
+    var gene_data = d.merged_genes.map((item, i) => {
+      return {'group': item, 'value': d.logfc[i]};
+      });
+
+    // extent of logfc values
+    var extent = d3.extent(gene_data, d => d.value);
+    palette.domain([extent[0], 0, extent[1]]);
+
+    // update the y axis domain and redraw
+    var groups = gene_data.map(item => item.group);
+
+    // height of tooltip svg
+    var maxHeatHeight = window.innerHeight - tooltipTitle.node().getBoundingClientRect().height;
+    var heatHeight = (groups.length*18) + margin.top + margin.bottom;
+    heatHeight = Math.min(maxHeatHeight, heatHeight);
+    svgHeat.attr("height", heatHeight)
+
+    y.domain(groups).range([ heatHeight-margin.top-margin.bottom, 0 ])
+
+    yAxis.call(d3.axisLeft(y).tickSizeOuter(0))
+
+    svgHeatG.selectAll("rect").remove()
+
+    svgHeatG.selectAll()
+        .data(gene_data, function(d) {return d.group;})
+        .enter()
+        .append("rect")
+        .attr("x", function(d) { return 1 })
+        .attr("y", function(d) { return y(d.group) })
+        .attr("width", y.bandwidth() )
+        .attr("height", y.bandwidth() )
+        .style("fill", function(d) { return palette(d.value)} )
+
+    };
+
 
   var mousemove = function(d) {
 
+    // if position from top and half height are more than window height, move up
+    let visibleHeight = window.innerHeight;
+    let mousetop = d3.mouse(this)[1];
+    let halftipHeight = tooltip.node().getBoundingClientRect().height/2;
+
+
+    let topto = mousetop - halftipHeight;
+    let bottomto = topto + (halftipHeight*2);
+    let overflowBottom = bottomto - visibleHeight;
+
+    if (topto < 0) {
+      topto = 0;
+
+    } else if (overflowBottom > 0) {
+      topto = topto - overflowBottom;
+    }
+
     tooltip
       .style("left", (d3.mouse(this)[0]+70) + "px")
-      .style("top", (d3.mouse(this)[1]) + "px");
+      .style("top", topto + "px");
   };
 
   var mouseleave = function(d) {
