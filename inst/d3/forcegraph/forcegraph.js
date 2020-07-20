@@ -1,5 +1,4 @@
-// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/miserables.json"), d3_version = 4, container = "div"
-
+// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/go_res.json"), d3_version = 4
 // Based on: https://bl.ocks.org/mbostock/4063570
 
 var color = d3.scaleOrdinal(d3.schemeCategory20);
@@ -28,48 +27,67 @@ r2d3.onRender(function(graph, svg, width, height, options) {
     .append("div")
     .style("padding", "5px");
 
-  // Labels of row and columns
-  var myGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 
-  // Build X scales and axis:
-  var x = d3.scaleBand()
-    .range([ 0, 200 ])
-    .domain(myGroups)
+  // containers for heatmap and its x-axis
+  var margin = {top: 30, right: 30, bottom: 30, left: 70},
+  heatWidth = 300 - margin.left - margin.right,
+  heatHeight = 350 - margin.top - margin.bottom;
+
+  svgHeat = tooltip
+  .append("svg")
+    .attr("width", heatWidth + margin.left + margin.right)
+    .attr("height", heatHeight + margin.top + margin.bottom);
+
+  svgHeatG = svgHeat
+  .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+  yAxis = svgHeatG
+    .append("g")
+
+  // Build Y scales and axis:
+  var y = d3.scaleBand()
+    .range([ heatHeight, 0 ])
     .padding(0.01);
-
-  svgHeat = tooltip.append("svg");
-
-  svgHeat.append("g")
-    .call(d3.axisBottom(x))
 
   // Build color scale
   var myColor = d3.scaleLinear()
     .range(["white", "#69b3a2"])
-    .domain([1,200])
-
-  //Read the data
-  data = [{"group": "A", "value": 30},
-          {"group": "B", "value": 40},
-          {"group": "J", "value": 99}]
-
-
-  svgHeat.selectAll()
-      .data(data, function(d) {return d.group;})
-      .enter()
-      .append("rect")
-      .attr("x", function(d) { return x(d.group) })
-      .attr("y", function(d) { return x.bandwidth() })
-      .attr("width", x.bandwidth() )
-      .attr("height", x.bandwidth() )
-      .style("fill", function(d) { return myColor(d.value)} )
-
-
-
-
-
+    .domain([-200,200])
 
   // Three function that change the tooltip when user hover / move / leave a cell
   var mouseover = function(d) {
+    // add GO name to tooltip
+    tooltipTitle.html(d.label);
+
+    //Read the heatmap data
+    // TODO: make real data
+    data = [{"group": "IFNGR", "value": 30},
+            {"group": "IL1B", "value": 40},
+            {"group": "IL1A", "value": -40},
+            {"group": "TNFRSB", "value": -5},
+            {"group": "IFNA", "value": 1},
+            {"group": "IFNAR1", "value": -20},
+            {"group": "SOCS1", "value": 99}]
+
+
+    // update the y axis domain and redraw
+    var groups = data.map(item => item.group);
+    y.domain(groups);
+
+    yAxis.call(d3.axisLeft(y))
+
+    svgHeatG.selectAll()
+        .data(data, function(d) {return d.group;})
+        .enter()
+        .append("rect")
+        .attr("x", function(d) { return 1 })
+        .attr("y", function(d) { return y(d.group) })
+        .attr("width", y.bandwidth() )
+        .attr("height", y.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value)} )
+
     tooltip
       .style("display", "block")
       .style("opacity", 1)
@@ -80,11 +98,8 @@ r2d3.onRender(function(graph, svg, width, height, options) {
 
   var mousemove = function(d) {
 
-    tooltipTitle.html(d.label);
-
-
     tooltip
-      .style("left", (d3.mouse(this)[0]+40) + "px")
+      .style("left", (d3.mouse(this)[0]+70) + "px")
       .style("top", (d3.mouse(this)[1]) + "px");
   };
 
@@ -114,12 +129,10 @@ r2d3.onRender(function(graph, svg, width, height, options) {
   .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
-        .on("end", dragended));
-
-  node
-    .on("mouseover", mouseover)
-    .on("mousemove", mousemove)
-    .on("mouseleave", mouseleave);
+        .on("end", dragended))
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);
 
 
   simulation

@@ -1,0 +1,14 @@
+{
+  "nodes":
+  [
+    {"id":"GO:1901748","label":"leukotriene D4 metabolism","fill":"#ffc3c3"},
+    {"id":"GO:2274","label":"myeloid leukocyte activation","fill":"#ff0000"},
+    {"id":"GO:7249","label":"I-kappaB kinase/NF-kappaB signaling","fill":"#ffd0d0"},
+    {"id":"GO:72604","label":"interleukin-6 secretion","fill":"#ffc6c6"},
+    {"id":"GO:6751","label":"glutathione catabolism","fill":"#ffc3c3"}
+    ],
+  "links":[
+      {"target":"GO:1901748","source":"GO:6751","value":0.389},
+      {"target":"GO:2274","source":"GO:72604","value":0.104}
+    ]
+}
