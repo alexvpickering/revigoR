@@ -25,19 +25,7 @@ setup_env <- function() {
 #'
 #' @examples
 #'
-#' go_res <- data.frame(
-#'  row.names = c('GO:0002274', 'GO:0006955', 'GO:0002366', 'GO:0006751', 'GO:1901748', 'GO:0002218', 'GO:0072604', 'GO:0007249'),
-#'  p.val = c(2e-27, 4e-27, 6e-24, 5e-7, 5e-7, 1e-6, 1e-6, 1e-5),
-#'  genes = c('ADAM8/ALOX5/AMPD3/ANXA3/RHOG/CEACAM1/BST1/CBL/CD58/CD59',
-#'               'ADAM8/ALOX5/AMPD3/ANXA1/ANXA3/XIAP/APOA4/RHOG/ARRB2/BCL3/BCL6/CEACAM1/POLR3D/BST1/C4BPA',
-#'               'ADAM8/ALOX5/AMPD3/ANXA1/ANXA3/RHOG/BCL3/BCL6/CEACAM1/BST1/CBL/CD86/CD58/CD59/CD63',
-#'               'GGT1/GGT3P/GGT5/GGTLC2/GGTLC1/GGT2',
-#'               'GGT1/GGT3P/GGT5/GGTLC2/GGTLC1/GGT2',
-#'               'XIAP/ARRB2/FCER1G/FFAR2/HCK/IRAK2/LYN/MUC3A/MYD88/NFKB1/NFKBIA/PAK2/PLCG2/PRKCD/PRKDC/RELA/RELB',
-#'               'IL1B/IL1RAP/MBP/HYAL2/LILRA2/C5AR2/TLR8/ZC3H12A/IL17RC/NLRP10/LILRA5',
-#'               'BCL3/DDX1/IL1B/IL1RN/IRAK2/LTBR/MYD88/NFKBIA/RELA/RELB/ROCK1/SECTM1/TNFAIP3/TNFRSF1A/TRIM25/CFLAR/USP10')
-#')
-#'
+#' data(go_res)
 #' data_dir <- tempdir()
 #' scrape_revigo(data_dir, go_res)
 #'
@@ -56,6 +44,20 @@ scrape_revigo <- function(data_dir, go_res) {
   message("Saved: ", paste(files, collapse = ', '), ' into ', data_dir)
 }
 
+#' Revigo MDS plot
+#'
+#' @param data_dir directory with scraped revigo data
+#'
+#' @return ggplot object
+#' @export
+#'
+#' @examples
+#'
+#' data(go_res)
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_res)
+#' revigo_scatterplot(data_dir)
+#'
 revigo_scatterplot <- function(data_dir) {
 
   # load revigo data
@@ -107,8 +109,22 @@ convert_kid <- function(kid) {
   return(res)
 }
 
-convert_xgmml <- function(xml_path) {
-  x <- xml2::read_xml(xml_path)
+#' Convert cytoscape xgmml to data.frames
+#'
+#' @param xgmml_path path to .xgmml file
+#'
+#' @return list of data.frames with nodes and links for forcegraph
+#' @export
+#'
+#' @examples
+#' data(go_res)
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_res)
+#' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
+#' data <- convert_xgmml(xgmml_path)
+#'
+convert_xgmml <- function(xgmml_path) {
+  x <- xml2::read_xml(xgmml_path)
 
   xpath_nodes <- "/d1:graph/d1:node"
 
@@ -147,6 +163,23 @@ convert_xgmml <- function(xml_path) {
   return(list(nodes=nodes, links=edges))
 }
 
+#' Format forcegraph data.frames to JSON
+#'
+#'
+#' @param data result of \code{\link{convert_xgmml}}
+#'
+#' @return JSON objects
+#' @export
+#'
+#' @examples
+#' data(go_res)
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_res)
+#' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
+#' data <- convert_xgmml(xgmml_path)
+#'
+#' r2d3::r2d3("inst/d3/forcegraph/forcegraph.js", data = data_to_json(data), d3_version = 4)
+#'
 data_to_json <- function(data) {
   jsonlite::toJSON(data,
     dataframe = "rows", null = "null", na = "null", auto_unbox = TRUE,

@@ -9,8 +9,17 @@ scrape_revigo(data_dir, go_res)
 \arguments{
 \item{data_dir}{Directory to store revigo scripts and output files}
 
-\item{go_res}{data.frame with first column containing GO ids and second column p-values}
+\item{go_res}{data.frame with row.names containing GO ids and first column p-values. An optional 3rd column
+can contain the significant genes seperated by forward slashes (used for heatplots of GO terms).}
 }
 \description{
 Note: requires installation of python packages through \code{\link{setup_env}}
+}
+\examples{
+
+data(go_res)
+data_dir <- tempdir()
+scrape_revigo(data_dir, go_res)
+
+
 }
