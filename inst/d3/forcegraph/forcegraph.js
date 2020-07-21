@@ -66,7 +66,7 @@ r2d3.onRender(function(graph, svg, width, height, options) {
 
     // format the heatmap data
     var gene_data = d.merged_genes.map((item, i) => {
-      return {'group': item, 'value': d.logfc[i]};
+      return {'group': item, 'value': d.logFC[i]};
       });
 
     // extent of logfc values

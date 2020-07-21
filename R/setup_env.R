@@ -1,14 +1,15 @@
 #' Install python packages required by package
 #'
+#' Creates virtualenv with name revigo and installs numpy, werkzeug, and robobrowser
+#'
 #' @return
 #' @export
 #'
-#' @examples
 setup_env <- function() {
 
   reticulate::virtualenv_create('revigo')
   reticulate::virtualenv_install(envname = 'revigo',
-                                 packages = c('numpy', 'werkzeug', 'robobrowser'),
+                                 packages = c('Hnumpy', 'werkzeug', 'robobrowser'),
                                  ignore_installed = TRUE)
 }
 
@@ -93,22 +94,6 @@ revigo_scatterplot <- function(data_dir) {
   p1
 }
 
-convert_kid <- function(kid) {
-
-  if (!'type' %in% names(kid)) {
-    res <- kid
-  } else if (kid['type'] == 'ELLIPSE') {
-    res <- c(kid['x'], kid['y'], kid['fill'])
-    names(res) <- c('x', 'y', 'fill')
-
-  } else {
-    res <- kid['value']
-    names(res) <- kid['name']
-  }
-
-  return(res)
-}
-
 #' Convert cytoscape xgmml to data.frames
 #'
 #' @param xgmml_path path to .xgmml file
@@ -188,6 +173,25 @@ data_to_json <- function(data) {
   )
 }
 
+#' Generate forcegraph plot of revigo GO graph
+#'
+#' If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
+#' merged into the the representative GO term in question.
+#'
+#' @inheritParams scrape_revigo
+#'
+#' @return r2d3 plot
+#' @export
+#' @seealso \link{add_path_genes} to enable heatplots on hover.
+#'
+#' @examples
+#'
+#' data(go_res)
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_res)
+#' r2d3_forcegraph(data_dir)
+#'
+#'
 r2d3_forcegraph <- function(data_dir) {
   xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
   data <- convert_xgmml(xgmml_path)
@@ -198,20 +202,22 @@ r2d3_forcegraph <- function(data_dir) {
 
 #' Add gene names and logfc values to forcegraph data
 #'
+#' Used internally by \link{r2d3_forcegraph}
+#'
 #' @param data result of \code{\link{convert_xgmml}}
 #' @param data_dir directory with scraped revigo data
 #'
 #' @return \code{data} with columes merged_genes and logfc added to nodes data.frame
 #' @export
+#' @keywords internal
 #'
-#' @examples
 append_genes <- function(data, data_dir) {
 
   # read original RDS with gene names/logfc values
   go_res <- readRDS(file.path(data_dir, 'go_res.rds'))
 
-  if (!all(c('genes', 'logfc') %in% colnames(go_res)))
-    stop("go_res supplied to scrape_revigo lacked columns 'genes' and/or 'logfc'")
+  if (!all(c('SYMBOL', 'logFC') %in% colnames(go_res)))
+    stop("go_res supplied to scrape_revigo lacked columns 'SYMBOL' and/or 'logFC'")
 
   # obtain revigo collapsed columns
   revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1)
@@ -220,8 +226,8 @@ append_genes <- function(data, data_dir) {
   # merge to unique genes and associated logfc within revigo groups
   go_merged <- go_res %>%
     dplyr::group_by(representative) %>%
-    dplyr::summarize(merged_genes = list(unlist(genes)[!duplicated(unlist(genes))]),
-                     logfc = list(unlist(logfc)[!duplicated(unlist(genes))]),
+    dplyr::summarize(merged_genes = list(unlist(SYMBOL)[!duplicated(unlist(SYMBOL))]),
+                     logFC = list(unlist(logFC)[!duplicated(unlist(SYMBOL))]),
                      id = paste0('GO:', unique(representative))) %>%
     dplyr::select(-representative)
 

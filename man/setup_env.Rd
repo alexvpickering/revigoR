@@ -10,5 +10,5 @@ setup_env()
 
 }
 \description{
-Install python packages required by package
+Creates virtualenv with name revigo and installs numpy, werkzeug, and robobrowser
 }

@@ -15,5 +15,6 @@ append_genes(data, data_dir)
 \code{data} with columes merged_genes and logfc added to nodes data.frame
 }
 \description{
-Add gene names and logfc values to forcegraph data
+Used internally by \link{r2d3_forcegraph}
 }
+\keyword{internal}
