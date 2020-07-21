@@ -82,7 +82,15 @@ get_gslist.go <- function(species = 'Hs') {
 #' # Differential expression analysis
 #' top_table <- topTable(fit, n = Inf)
 #'
-#' go_res <- add_path_genes(go_res, top_table)
+#' # example for upregulated ontologies
+#' go_up <- go_res[go_res$P.Up < 10e-5 & go_res$P.Up < go_res$P.Down, ]
+#' go_up <- add_path_genes(go_up, top_table)
+#'
+#' # column ordering expected by scrape_revigo
+#' go_up <- go_up[, c('P.Up', 'SYMBOL', 'logFC')]
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_up)
+#'
 #'
 add_path_genes <- function(go_res, top_table, gslist = NULL, species = 'Hs', FDR = 0.05) {
 
@@ -90,8 +98,10 @@ add_path_genes <- function(go_res, top_table, gslist = NULL, species = 'Hs', FDR
   if (is.null(gslist)) gslist <- get_gslist.go(species)
 
   path_ids <- row.names(go_res)
+  gslist <- gslist[path_ids]
 
   enids <- na.omit(top_table$ENTREZID[top_table$adj.P.Val < FDR])
+  enids <- as.character(enids)
   go_res$SYMBOL <- lapply(gslist, function(x) unique(names(x[x %in% enids])))
 
   logfc <- top_table$logFC

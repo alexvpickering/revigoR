@@ -181,6 +181,7 @@ data_to_json <- function(data) {
 #' @inheritParams scrape_revigo
 #'
 #' @return r2d3 plot
+#' @importFrom magrittr %>%
 #' @export
 #' @seealso \link{add_path_genes} to enable heatplots on hover.
 #'

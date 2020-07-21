@@ -44,6 +44,14 @@ go_res <- goana(fit, species="Hs")
 # Differential expression analysis
 top_table <- topTable(fit, n = Inf)
 
-go_res <- add_path_genes(go_res, top_table)
+# example for upregulated ontologies
+go_up <- go_res[go_res$P.Up < 10e-5 & go_res$P.Up < go_res$P.Down, ]
+go_up <- add_path_genes(go_up, top_table)
+
+# column ordering expected by scrape_revigo
+go_up <- go_up[, c('P.Up', 'SYMBOL', 'logFC')]
+data_dir <- tempdir()
+scrape_revigo(data_dir, go_up)
+
 
 }

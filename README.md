@@ -19,7 +19,7 @@ data(go_res)
 data_dir <- tempdir()
 scrape_revigo(data_dir, go_res)
 
-# various plots of revigo results
+# interactive and static plots of revigo results
 revigo_scatterplot(data_dir)
 r2d3_forcegraph(data_dir)
 ```

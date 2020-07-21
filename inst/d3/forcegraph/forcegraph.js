@@ -17,6 +17,7 @@ r2d3.onRender(function(graph, svg, width, height, options) {
     .append("div")
       .style("position", "absolute")
       .style("opacity", 0)
+      .style("width", "200px")
       .attr("class", "tooltip")
       .style("background", "white")
       .style("border-radius", "0px")
@@ -29,24 +30,38 @@ r2d3.onRender(function(graph, svg, width, height, options) {
 
 
   // containers for heatmap and its x-axis
-  var margin = {top: 10, right: 30, bottom: 10, left: 70},
-  heatWidth = 300 - margin.left - margin.right;
+  var margin = {top: 10, right: 10, bottom: 10, left: 70},
+  heatWidth = 100 - margin.left - margin.right;
 
-  svgHeat = tooltip
+  svgHeatUp = tooltip
   .append("svg")
-    .attr("width", heatWidth + margin.left + margin.right);
+    .attr("width", heatWidth + margin.left + margin.right)
+     .style("vertical-align", "top");
 
-  svgHeatG = svgHeat
+  svgHeatDown = tooltip
+  .append("svg")
+    .attr("width", heatWidth + margin.left + margin.right)
+    .style("vertical-align", "top");
+
+  svgHeatUpG = svgHeatUp
   .append("g")
       .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
 
-  yAxis = svgHeatG
-    .append("g")
+   svgHeatDownG = svgHeatDown
+  .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+  yAxisUp = svgHeatUpG
+    .append("g");
+
+  yAxisDown = svgHeatDownG
+    .append("g");
 
   // Build Y scales and axis:
-  var y = d3.scaleBand()
-    .padding(0.01);
+  var yUp = d3.scaleBand().padding(0.01);
+  var yDown = d3.scaleBand().padding(0.01);
 
   // Build color scale
   var palette = d3.scaleLinear().range(["green", "white", "red"]);
@@ -65,37 +80,62 @@ r2d3.onRender(function(graph, svg, width, height, options) {
     tooltipTitle.html(d.label);
 
     // format the heatmap data
-    var gene_data = d.merged_genes.map((item, i) => {
+    var geneData = d.merged_genes.map((item, i) => {
       return {'group': item, 'value': d.logFC[i]};
       });
 
+    var geneDataUp = geneData
+      .filter(item => item.value > 0)
+      .sort((a,b) => a.value - b.value);
+
+    var geneDataDown = geneData
+      .filter(item => item.value <= 0)
+      .sort((a,b) => b.value - a.value);
+
     // extent of logfc values
-    var extent = d3.extent(gene_data, d => d.value);
+    var extent = d3.extent(geneData, d => d.value);
     palette.domain([extent[0], 0, extent[1]]);
 
     // update the y axis domain and redraw
-    var groups = gene_data.map(item => item.group);
+    var groupsUp = geneDataUp.map(item => item.group);
+    var groupsDown = geneDataDown.map(item => item.group);
 
     // height of tooltip svg
     var maxHeatHeight = window.innerHeight - tooltipTitle.node().getBoundingClientRect().height;
-    var heatHeight = (groups.length*18) + margin.top + margin.bottom;
-    heatHeight = Math.min(maxHeatHeight, heatHeight);
-    svgHeat.attr("height", heatHeight)
+    var heatHeightUp = (groupsUp.length*18) + margin.top + margin.bottom;
+    var heatHeightDown = (groupsDown.length*18) + margin.top + margin.bottom;
+    heatHeightUp = Math.min(maxHeatHeight, heatHeightUp);
+    heatHeightDown = Math.min(maxHeatHeight, heatHeightDown);
+    svgHeatUp.attr("height", heatHeightUp)
+    svgHeatDown.attr("height", heatHeightDown)
 
-    y.domain(groups).range([ heatHeight-margin.top-margin.bottom, 0 ])
+    yUp.domain(groupsUp).range([ heatHeightUp-margin.top-margin.bottom, 0 ])
+    yDown.domain(groupsDown).range([ heatHeightDown-margin.top-margin.bottom, 0 ])
 
-    yAxis.call(d3.axisLeft(y).tickSizeOuter(0))
+    yAxisUp.call(d3.axisLeft(yUp).tickSizeOuter(0))
+    yAxisDown.call(d3.axisLeft(yDown).tickSizeOuter(0))
 
-    svgHeatG.selectAll("rect").remove()
+    svgHeatUpG.selectAll("rect").remove()
+    svgHeatDownG.selectAll("rect").remove()
 
-    svgHeatG.selectAll()
-        .data(gene_data, function(d) {return d.group;})
+    svgHeatUpG.selectAll()
+        .data(geneDataUp, function(d) {return d.group;})
         .enter()
         .append("rect")
         .attr("x", function(d) { return 1 })
-        .attr("y", function(d) { return y(d.group) })
-        .attr("width", y.bandwidth() )
-        .attr("height", y.bandwidth() )
+        .attr("y", function(d) { return yUp(d.group) })
+        .attr("width", yUp.bandwidth() )
+        .attr("height", yUp.bandwidth() )
+        .style("fill", function(d) { return palette(d.value)} )
+
+    svgHeatDownG.selectAll()
+        .data(geneDataDown, function(d) {return d.group;})
+        .enter()
+        .append("rect")
+        .attr("x", function(d) { return 1 })
+        .attr("y", function(d) { return yDown(d.group) })
+        .attr("width", yDown.bandwidth() )
+        .attr("height", yDown.bandwidth() )
         .style("fill", function(d) { return palette(d.value)} )
 
     };
