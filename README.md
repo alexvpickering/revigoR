@@ -19,10 +19,25 @@ data(go_up1)
 data_dir <- tempdir()
 scrape_revigo(data_dir, go_up1)
 
-# interactive and static plots of revigo results
-revigo_scatterplot(data_dir)
+# forcegraph of revigo results (from cytoscape graph)
 revigo_forcegraph(data_dir)
 ```
 
 ![forcegraph](man/figures/forcegraph.png)
 
+### Two GO Analyses
+
+Visualize where revigo merges terms across two GO analyses (shades of purple) and doesn't:
+
+```R
+#' # two analyses
+#' data(go_up2)
+#' go_up1$analysis <- 0
+#' go_up2$analysis <- 1
+#' go_up <- rbind(go_up1, go_up2)
+#'
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_up)
+#' revigo_forcegraph(data_dir)
+```
+![forcegraph with two analyses](man/figures/forcegraph_two.png)
