@@ -13,15 +13,15 @@ library(revigoR)
 setup_env()
 
 # see ?add_path_genes for example workflow starting with limma differential expression
-data(go_res)
+data(go_up1)
 
 # submit goana result to revigo web app and download results to data_dir
 data_dir <- tempdir()
-scrape_revigo(data_dir, go_res)
+scrape_revigo(data_dir, go_up1)
 
 # interactive and static plots of revigo results
 revigo_scatterplot(data_dir)
-r2d3_forcegraph(data_dir)
+revigo_forcegraph(data_dir)
 ```
 
 ![forcegraph](man/figures/forcegraph.png)

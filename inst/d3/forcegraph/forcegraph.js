@@ -1,4 +1,4 @@
-// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/go_res.json"), d3_version = 4
+// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/go_up1.json"), d3_version = 4
 // Based on: https://bl.ocks.org/mbostock/4063570
 
 var color = d3.scaleOrdinal(d3.schemeCategory20);

@@ -9,18 +9,18 @@ scrape_revigo(data_dir, go_res)
 \arguments{
 \item{data_dir}{Directory to store revigo scripts and output files}
 
-\item{go_res}{data.frame with row.names containing GO ids and first column p-values. An optional 3rd and 4th column
-can contain lists of significant genes and their logFC values respectively (used for heatplots of GO terms).
-An optional 5th column can contain a variable to indicate analysis identity (used to compare two seperate GO analyses).}
+\item{go_res}{data.frame with row.names containing GO ids and first column p-values. Optional columns \code{SYMBOL}
+and \code{logFC} can contain lists of significant genes and their logFC values respectively (used for heatplots of GO terms).
+An optional \code{analysis} integer column can contain 0 and 1's to indicate analysis identity (used to compare two seperate GO analyses).}
 }
 \description{
 Note: requires installation of python packages through \code{\link{setup_env}}
 }
 \examples{
 
-data(go_res)
+data(go_up1)
 data_dir <- tempdir()
-scrape_revigo(data_dir, go_res)
+scrape_revigo(data_dir, go_up1)
 
 
 }

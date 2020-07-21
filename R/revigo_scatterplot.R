@@ -7,9 +7,9 @@
 #'
 #' @examples
 #'
-#' data(go_res)
+#' data(go_up1)
 #' data_dir <- tempdir()
-#' scrape_revigo(data_dir, go_res)
+#' scrape_revigo(data_dir, go_up1)
 #' revigo_scatterplot(data_dir)
 #'
 revigo_scatterplot <- function(data_dir) {
@@ -48,67 +48,7 @@ revigo_scatterplot <- function(data_dir) {
 }
 
 
-#' Generate forcegraph plot of revigo GO graph
-#'
-#' If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
-#' merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (green)
-#' genes with the largest absolute logFC are displayed.
-#'
-#' @inheritParams scrape_revigo
-#'
-#' @return r2d3 plot
-#' @importFrom magrittr %>%
-#' @export
-#' @seealso \link{add_path_genes} to enable heatplots on hover.
-#'
-#' @examples
-#'
-#' data(go_res)
-#' data_dir <- tempdir()
-#' scrape_revigo(data_dir, go_res)
-#' r2d3_forcegraph(data_dir)
-#'
-#'
-r2d3_forcegraph <- function(data_dir) {
-  xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
-  data <- convert_xgmml(xgmml_path)
-  data <- append_genes(data, data_dir)
 
-  r2d3::r2d3(system.file("d3/forcegraph/forcegraph.js", package = 'revigoR'), data = data_to_json(data), d3_version = 4)
-}
 
-#' Add gene names and logfc values to forcegraph data
-#'
-#' Used internally by \link{r2d3_forcegraph}
-#'
-#' @param data result of \code{\link{convert_xgmml}}
-#' @param data_dir directory with scraped revigo data
-#'
-#' @return \code{data} with columes merged_genes and logfc added to nodes data.frame
-#' @export
-#' @keywords internal
-#'
-append_genes <- function(data, data_dir) {
 
-  # read original RDS with gene names/logfc values
-  go_res <- readRDS(file.path(data_dir, 'go_res.rds'))
 
-  if (!all(c('SYMBOL', 'logFC') %in% colnames(go_res)))
-    stop("go_res supplied to scrape_revigo lacked columns 'SYMBOL' and/or 'logFC'")
-
-  # obtain revigo collapsed columns
-  revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1)
-  go_res$representative <- revigo_res[row.names(go_res), 'representative']
-
-  # merge to unique genes and associated logfc within revigo groups
-  go_merged <- go_res %>%
-    dplyr::group_by(representative) %>%
-    dplyr::summarize(merged_genes = list(unlist(SYMBOL)[!duplicated(unlist(SYMBOL))]),
-                     logFC = list(unlist(logFC)[!duplicated(unlist(SYMBOL))]),
-                     id = paste0('GO:', unique(representative))) %>%
-    dplyr::select(-representative)
-
-  data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
-
-  return(data)
-}
