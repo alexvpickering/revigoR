@@ -84,12 +84,15 @@ r2d3.onRender(function(graph, svg, width, height, options) {
       return {'group': item, 'value': d.logFC[i]};
       });
 
+    // 70 up or down genes is most that is practical to fit
     var geneDataUp = geneData
       .filter(item => item.value > 0)
+      .filter((item, idx) => idx < 70)
       .sort((a,b) => a.value - b.value);
 
     var geneDataDown = geneData
       .filter(item => item.value <= 0)
+      .filter((item, idx) => idx < 70)
       .sort((a,b) => b.value - a.value);
 
     // extent of logfc values
