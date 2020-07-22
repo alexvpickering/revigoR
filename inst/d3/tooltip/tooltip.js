@@ -135,8 +135,12 @@ var mousemove = function(d) {
 
   // if position from top and half height are more than window height, move up
   let visibleHeight = window.innerHeight;
+  let visibleWidth = window.innerHeight;
   let mousetop = d3.event.pageY;
-  let halftipHeight = tooltip.node().getBoundingClientRect().height/2;
+  let mouseright = d3.event.pageX;
+  let tooltipBB = tooltip.node().getBoundingClientRect();
+  let halftipHeight = tooltipBB.height/2;
+  let tooltipWidth = tooltipBB.width;
 
 
   let topto = mousetop - halftipHeight;
@@ -150,8 +154,16 @@ var mousemove = function(d) {
     topto = topto - overflowBottom;
   }
 
+  let leftto = mouseright + 20;
+  let rightto = mouseright + tooltipWidth;
+  let overflowRight = rightto - visibleWidth;
+
+  if (overflowRight > 0) {
+    leftto = mouseright - tooltipWidth - 20;
+  }
+
   tooltip
-    .style("left", (d3.event.pageX + 20) + "px")
+    .style("left", leftto + "px")
     .style("top", topto + "px");
 };
 
