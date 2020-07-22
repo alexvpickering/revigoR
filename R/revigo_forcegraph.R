@@ -42,64 +42,13 @@ revigo_forcegraph <- function(data_dir) {
   data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
   data <- adjust_forcegraph_colors(data)
 
-  r2d3::r2d3(system.file("d3/forcegraph/forcegraph.js", package = 'revigoR'), data = data_to_json(data), d3_version = 4)
-}
+  r2d3::r2d3(
+    system.file("d3/forcegraph/forcegraph.js", package = 'revigoR'),
+    data = data_to_json(data),
+    dependencies = system.file("d3/tooltip/tooltip.js", package = 'revigoR'),
+    d3_version = 4
+  )
 
-#' Get merged gene names, logfc values, and analysis indicator
-#'
-#' Used internally by \link{revigo_forcegraph} and \code{revigo_scatterplot}
-#'
-#' @param data_dir directory with scraped revigo data
-#'
-#' @importFrom magrittr %>%
-#' @return \code{tibble} with columes merged_genes, logFC, analysis, and id
-#' @export
-#' @keywords internal
-#'
-#' data(go_up1)
-#' data_dir <- tempdir()
-#' scrape_revigo(data_dir, go_up1)
-#' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
-#' data <- convert_xgmml(xgmml_path)
-#' data <- get_merged_annotations(data_dir)
-#'
-get_merged_annotations <- function(data_dir) {
-
-  # read original RDS with gene names/logfc values
-  go_res <- readRDS(file.path(data_dir, 'go_res.rds'))
-
-  if (!all(c('SYMBOL', 'logFC') %in% colnames(go_res)))
-    stop("go_res supplied to scrape_revigo lacked columns 'SYMBOL' and/or 'logFC'")
-
-  if (length(unique(go_res$analysis)) > 2)
-    stop("go_res supplied to scrape_revigo has more than two unique analyses")
-
-  if (is.null(go_res$analysis)) go_res$analysis <- 0
-
-  # obtain revigo collapsed columns
-  revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1, stringsAsFactors = FALSE, check.names = FALSE)
-
-  # label used by tooltip
-  revigo_res$label <- revigo_res$description
-
-  # remove leading zeros in GO:0 for joins
-  revigo_res$id <- gsub(':0+', ':', row.names(revigo_res))
-
-  go_res$representative <- revigo_res[row.names(go_res), 'representative']
-
-  # merge to unique genes and associated logfc within revigo groups
-  # if two analyses merge set analysis indicator to 2
-  go_merged <- go_res %>%
-    dplyr::group_by(representative) %>%
-    dplyr::summarize(merged_genes = list(unlist(SYMBOL)[!duplicated(unlist(SYMBOL))]),
-                     logFC = list(unlist(logFC)[!duplicated(unlist(SYMBOL))]),
-                     id = paste0('GO:', unique(representative)),
-                     analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis))) %>%
-    dplyr::select(-representative)
-
-  go_merged <- dplyr::left_join(go_merged, revigo_res, by = 'id')
-
-  return(go_merged)
 }
 
 #' Adjust forcegraph colors to compare multiple analyses
@@ -185,29 +134,4 @@ convert_xgmml <- function(xgmml_path) {
   edges$value <- as.numeric(as.character(edges$value))
 
   return(list(nodes=nodes, links=edges))
-}
-
-#' Format forcegraph data.frames to JSON
-#'
-#'
-#' @param data result of \code{\link{convert_xgmml}}
-#'
-#' @return JSON objects
-#' @export
-#'
-#' @examples
-#' data(go_up1)
-#' data_dir <- tempdir()
-#' scrape_revigo(data_dir, go_up1)
-#' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
-#' data <- convert_xgmml(xgmml_path)
-#' data_to_json(data)
-#'
-data_to_json <- function(data) {
-  jsonlite::toJSON(data,
-                   dataframe = "rows", null = "null", na = "null", auto_unbox = TRUE,
-                   digits = getOption("shiny.json.digits", 16), use_signif = TRUE, force = TRUE,
-                   POSIXt = "ISO8601", UTC = TRUE, rownames = FALSE, keep_vec_names = TRUE,
-                   json_verabitm = TRUE
-  )
 }

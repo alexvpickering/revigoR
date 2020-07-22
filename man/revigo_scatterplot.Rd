@@ -22,6 +22,7 @@ Revigo MDS plot
 data(go_up1)
 data_dir <- tempdir()
 scrape_revigo(data_dir, go_up1)
+revigo_scatterplot(data_dir)
 
 # two analyses
 data(go_up2)

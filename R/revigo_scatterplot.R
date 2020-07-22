@@ -65,6 +65,7 @@ revigo_scatterplot_original <- function(data_dir) {
 #' data(go_up1)
 #' data_dir <- tempdir()
 #' scrape_revigo(data_dir, go_up1)
+#' revigo_scatterplot(data_dir)
 #'
 #' # two analyses
 #' data(go_up2)
@@ -79,7 +80,12 @@ revigo_scatterplot <- function(data_dir) {
 
   # load revigo data
   data <- get_merged_annotations(data_dir)
-  r2d3::r2d3("inst/d3/scatterplot/scatterplot.js", data = data_to_json(data), d3_version = 4)
+  r2d3::r2d3(
+    system.file("d3/scatterplot/scatterplot.js", package = 'revigoR'),
+    data = data_to_json(data),
+    dependencies = system.file("d3/tooltip/tooltip.js", package = 'revigoR'),
+    d3_version = 4
+  )
 
 }
 
