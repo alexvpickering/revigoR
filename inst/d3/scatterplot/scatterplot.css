@@ -10,12 +10,6 @@ body {
 }
 
 .dot {
-  stroke: #000;
-}
-
-.tooltip {
-  position: absolute;
-  width: 200px;
-  height: 28px;
-  pointer-events: none;
+  stroke: #ddd;
+  stroke-width: 1.5px;
 }

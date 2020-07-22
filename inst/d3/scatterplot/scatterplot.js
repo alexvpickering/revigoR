@@ -1,7 +1,8 @@
-// !preview r2d3 data = jsonlite::read_json("inst/d3/scatterplot/scatterplot.json"), d3_version = 4
+// !preview r2d3 data = jsonlite::read_json("inst/d3/scatterplot/scatterplot.json"), d3_version = 4, dependencies = "inst/d3/tooltip/tooltip.js"
 
 
 r2d3.onRender(function(data, svg, width, height, options) {
+
 
   var margin = {top: 20, right: 20, bottom: 50, left: 50};
   width = width - margin.left - margin.right;
@@ -23,7 +24,13 @@ r2d3.onRender(function(data, svg, width, height, options) {
   // setup fill color
   var cValue = function(d) { return -d["log10 p-value"];};
   var extent = d3.extent(data.map(cValue));
-  var myColor = d3.scaleLinear().domain([extent[0],extent[1]]).range(["#FFF5F0", "#EF3B2C"]);
+  var palettes = [d3.scaleLinear().domain([extent[0],extent[1]]).range(["#FFF5F0", "#EF3B2C"]),
+                  d3.scaleLinear().domain([extent[0],extent[1]]).range(["#F7FBFF", "#2171B5"]),
+                  d3.scaleLinear().domain([extent[0],extent[1]]).range(["#FCFBFD", "#6A51A3"])];
+  var myColor = function(d) {
+    let anal = d.analysis ? d.analysis : 0;
+    return palettes[anal](cValue(d));
+  };
 
   // add the graph canvas to the body of the webpage
   var svgG = svg
@@ -31,15 +38,6 @@ r2d3.onRender(function(data, svg, width, height, options) {
       .attr("height", height + margin.top + margin.bottom)
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-  // add the tooltip area to the webpage
-  var tooltip = d3.select("body").append("div")
-      .style("position", "absolute")
-      .style("pointer-events", "none")
-      .style("background-color", "white")
-      .style("border", "1px solid #dddddd")
-      .style("padding", "5px")
-      .style("opacity", 0);
 
   // remove null values
   data = data.filter(d => d.plot_X !== 'null');
@@ -90,27 +88,10 @@ r2d3.onRender(function(data, svg, width, height, options) {
       .attr("r", 6)
       .attr("cx", xMap)
       .attr("cy", yMap)
-      .style("fill", function(d) { return myColor(cValue(d));})
-      .on("mouseover", function(d) {
-
-        console.log(cValue(d))
-
-          d3.select(this)
-            .style("stroke-width", "2px");
-
-          tooltip.style("opacity", 0.9);
-          tooltip.html(d.description + "<br/> (" + xValue(d) + ", " + yValue(d) + ")")
-
-          tooltip
-               .style("left", (d3.mouse(this)[0]+70) + "px")
-               .style("top", d3.mouse(this)[1] + "px");
-      })
-      .on("mouseout", function(d) {
-          tooltip.style("opacity", 0);
-
-          d3.select(this)
-          .style("stroke-width", "1px");
-      });
+      .style("fill", function(d) { return myColor(d);})
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);
 
 
 });
