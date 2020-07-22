@@ -25,6 +25,13 @@ revigo_forcegraph(data_dir)
 
 ![forcegraph](man/figures/forcegraph.png)
 
+An interactive scatterplot using the MDS coordinate from revigo can also be generated:
+
+```R
+revigo_scatterplot(data_dir)
+```
+![scatterplot](man/figures/scatterplot.png)
+
 ### Two GO Analyses
 
 Visualize where revigo merges terms across two GO analyses (shades of purple) and doesn't (shades of red and blue for each analysis respectively):
@@ -41,3 +48,11 @@ scrape_revigo(data_dir, go_up)
 revigo_forcegraph(data_dir)
 ```
 ![forcegraph with two analyses](man/figures/forcegraph_two.png)
+
+
+`revigo_scatterplot` also supports two analysis results:
+
+```R
+revigo_scatterplot(data_dir)
+```
+![forcegraph](man/figures/scatterplot_two.png)
