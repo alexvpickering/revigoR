@@ -10,10 +10,17 @@ revigo_scatterplot(data_dir)
 \item{data_dir}{directory with scraped revigo data}
 }
 \value{
-ggplot object
+r2d3 plot
 }
 \description{
-Revigo MDS plot
+If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
+merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (green)
+genes with the largest absolute logFC are displayed.
+}
+\details{
+If \code{scrape_revigo} is used with two analyses (see examples), revigo ontolgies where no merge occured
+across analyses will be shades of red and blue while ontologies where a merge occured across analyses
+will be shades of purple.
 }
 \examples{
 
@@ -26,7 +33,7 @@ revigo_scatterplot(data_dir)
 
 # two analyses
 data(go_up2)
-
+data_dir <- tempdir()
 go_up1$analysis <- 0
 go_up2$analysis <- 1
 go_up <- rbind(go_up1, go_up2)
