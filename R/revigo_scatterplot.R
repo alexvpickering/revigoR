@@ -31,15 +31,17 @@ revigo_scatterplot <- function(data_dir) {
   one.y_range = max(revigo.data$plot_Y) - min(revigo.data$plot_Y)
 
   p1 <- ggplot2::ggplot(data = revigo.data) +
-    ggplot2::geom_point(ggplot2::aes(plot_X, plot_Y, colour = log10_p_value, size = plot_size), alpha = I(0.6)) +
+    ggplot2::geom_point(ggplot2::aes(plot_X, plot_Y, colour = -log10_p_value), alpha = I(0.6), size = 2) +
     ggplot2::scale_size_area() +
-    ggplot2::scale_colour_gradientn(colours = c("blue", "green", "yellow", "red"), limits = c(min(revigo.data$log10_p_value), 0)) +
-    ggplot2::geom_point(ggplot2::aes(plot_X, plot_Y, size = plot_size), shape = 21, fill = "transparent", colour = I (ggplot2::alpha("black", 0.6))) +
+    ggplot2::scale_colour_gradientn(colours = c("blue", "green", "yellow", "red")) +
+    ggplot2::geom_point(ggplot2::aes(plot_X, plot_Y), shape = 1, fill = "transparent", colour = I (ggplot2::alpha("black", 0.1))) +
     ggplot2::scale_size_area() +
     ggplot2::scale_size(range=c(5, 30)) +
     ggplot2::theme_bw() +
-    ggplot2::geom_text(data = ex, ggplot2::aes(plot_X, plot_Y, label = description), colour = I(ggplot2::alpha("black", 0.85)), size = 3) +
-    ggplot2::labs (y = "semantic space x", x = "semantic space y") +
+    ggrepel::geom_label_repel(data = ex,
+                              min.segment.length = 0,label.size = 0, label.padding = 0,
+                              ggplot2::aes(plot_X, plot_Y, label = description), colour = I(ggplot2::alpha("black", 0.85)), size = 3) +
+    ggplot2::labs (y = "Semantic Space X", x = "Semantic Space Y") +
     ggplot2::theme(legend.key = ggplot2::element_blank()) +
     ggplot2::xlim(min(revigo.data$plot_X)-one.x_range/10,max(revigo.data$plot_X)+one.x_range/10) +
     ggplot2::ylim(min(revigo.data$plot_Y)-one.y_range/10,max(revigo.data$plot_Y)+one.y_range/10)
