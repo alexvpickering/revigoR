@@ -9,11 +9,11 @@
 #' @export
 #' @keywords internal
 #'
+#' @examples
+#'
 #' data(go_up1)
 #' data_dir <- tempdir()
 #' scrape_revigo(data_dir, go_up1)
-#' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
-#' data <- convert_xgmml(xgmml_path)
 #' data <- get_merged_annotations(data_dir)
 #'
 get_merged_annotations <- function(data_dir) {
@@ -29,8 +29,10 @@ get_merged_annotations <- function(data_dir) {
 
   if (is.null(go_res$analysis)) go_res$analysis <- 0
 
-  # obtain revigo collapsed columns
+  # some revigo GO ids absent because of version differences in GO
   revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1, stringsAsFactors = FALSE, check.names = FALSE)
+  go_res <- go_res[row.names(revigo_res), ]
+
 
   # label used by tooltip
   revigo_res$label <- revigo_res$description
@@ -38,7 +40,7 @@ get_merged_annotations <- function(data_dir) {
   # remove leading zeros in GO:0 for joins
   revigo_res$id <- gsub(':0+', ':', row.names(revigo_res))
 
-  go_res$representative <- revigo_res[row.names(go_res), 'representative']
+  go_res$representative <- revigo_res$representative
 
   # get genes where inconsistent logFC (occurs with two analyses)
   exclude <- get_inconsistent_genes(unnameunlist(go_res$SYMBOL),
@@ -48,15 +50,44 @@ get_merged_annotations <- function(data_dir) {
   # if two analyses merge set analysis indicator to 2
   go_merged <- go_res %>%
     dplyr::group_by(representative) %>%
-    dplyr::summarize(merged_genes = list(unlist(SYMBOL)[is_consistent(unnameunlist(SYMBOL), exclude)]),
-                     logFC = list(unlist(logFC)[is_consistent(unnameunlist(SYMBOL), exclude)]),
+    dplyr::summarize(merged_genes = summarize_genes(SYMBOL, exclude),
+                     logFC = summarize_logfc(SYMBOL, logFC, exclude),
                      id = paste0('GO:', unique(representative)),
-                     analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis))) %>%
+                     analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis)), .groups = 'drop') %>%
     dplyr::select(-representative)
 
   go_merged <- dplyr::left_join(go_merged, revigo_res, by = 'id')
 
   return(go_merged)
+}
+
+summarize_genes <- function(SYMBOL, exclude) {
+  symbols <- unnameunlist(SYMBOL)
+  symbols <- symbols[!duplicated(symbols) & !symbols %in% exclude]
+  return(list(symbols))
+}
+
+summarize_logfc <- function(SYMBOL, logFC, exclude) {
+  # remove excluded
+  df <- dplyr::tibble(SYMBOL = unnameunlist(SYMBOL),
+                      logFC = unnameunlist(logFC)) %>%
+    dplyr::filter(!SYMBOL %in% exclude)
+
+  # summarize rest with mean
+  means <- df %>%
+    dplyr::group_by(SYMBOL) %>%
+    dplyr::summarize(SYMBOL = SYMBOL[1],
+                     logFC = mean(unique(logFC)), .groups = 'drop')
+
+  # extract logfcs in same order as summarize_genes
+  logfc <- df %>%
+    dplyr::select(SYMBOL) %>%
+    dplyr::distinct() %>%
+    dplyr::left_join(means, by = 'SYMBOL') %>%
+    dplyr::pull(logFC)
+
+  return(list(logfc))
+
 }
 
 unnameunlist <- function(x) {
@@ -98,18 +129,6 @@ get_inconsistent_genes <- function(symbols, logfc) {
   return(exclude)
 }
 
-#' Resolve conflicts of logfc for multi-sample analyses
-#'
-#' @param symbols character vector of gene names
-#' @param exclude gene names to exclude
-#'
-#' @return boolean of length \code{unlist(symbols)}
-#' @export
-#' @keywords internal
-#'
-is_consistent <- function(symbols, exclude) {
-  !duplicated(symbols) & !symbols %in% exclude
-}
 
 #' Format forcegraph data.frames to JSON
 #'

@@ -15,16 +15,12 @@ get_merged_annotations(data_dir)
 \description{
 Used internally by \link{revigo_forcegraph} and \code{revigo_scatterplot}
 }
-\keyword{'cytoscape_map.xgmml')}
-\keyword{<-}
-\keyword{convert_xgmml(xgmml_path)}
-\keyword{data}
-\keyword{data(go_up1)}
-\keyword{data_dir}
-\keyword{file.path(data_dir,}
-\keyword{get_merged_annotations(data_dir)}
-\keyword{go_up1)}
+\examples{
+
+data(go_up1)
+data_dir <- tempdir()
+scrape_revigo(data_dir, go_up1)
+data <- get_merged_annotations(data_dir)
+
+}
 \keyword{internal}
-\keyword{scrape_revigo(data_dir,}
-\keyword{tempdir()}
-\keyword{xgmml_path}
