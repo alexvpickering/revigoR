@@ -7,7 +7,8 @@
 #'
 #' If \code{scrape_revigo} is used with two analyses (see examples), revigo ontolgies where no merge occured
 #' across analyses will be shades of red and blue while ontologies where a merge occured across analyses
-#' will be shades of purple.
+#' will be shades of purple. For tooltip heatmaps with two analyses, any genes regulated in opposite directions
+#' are excluded.
 #'
 #' @inheritParams scrape_revigo
 #'

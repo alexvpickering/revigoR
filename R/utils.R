@@ -40,12 +40,16 @@ get_merged_annotations <- function(data_dir) {
 
   go_res$representative <- revigo_res[row.names(go_res), 'representative']
 
+  # get genes where inconsistent logFC (occurs with two analyses)
+  exclude <- get_inconsistent_genes(unnameunlist(go_res$SYMBOL),
+                                    unnameunlist(go_res$logFC))
+
   # merge to unique genes and associated logfc within revigo groups
   # if two analyses merge set analysis indicator to 2
   go_merged <- go_res %>%
     dplyr::group_by(representative) %>%
-    dplyr::summarize(merged_genes = list(unlist(SYMBOL)[!duplicated(unlist(SYMBOL))]),
-                     logFC = list(unlist(logFC)[!duplicated(unlist(SYMBOL))]),
+    dplyr::summarize(merged_genes = list(unlist(SYMBOL)[is_consistent(unnameunlist(SYMBOL), exclude)]),
+                     logFC = list(unlist(logFC)[is_consistent(unnameunlist(SYMBOL), exclude)]),
                      id = paste0('GO:', unique(representative)),
                      analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis))) %>%
     dplyr::select(-representative)
@@ -53,6 +57,58 @@ get_merged_annotations <- function(data_dir) {
   go_merged <- dplyr::left_join(go_merged, revigo_res, by = 'id')
 
   return(go_merged)
+}
+
+unnameunlist <- function(x) {
+  unname(unlist(x))
+}
+
+#' Identify genes with inconsistent logFC values
+#'
+#' Used to resolve conflicts for two-analysis plots.
+#'
+#' @param symbols character vector of gene names
+#' @param logfc numeric vector of logFC values
+#'
+#' @return character vector of gene names where logFC values disagree
+#' @export
+#' @keywords internal
+#'
+get_inconsistent_genes <- function(symbols, logfc) {
+
+  exclude <- c()
+  if (length(unique(symbols)) == length(symbols)) return(exclude)
+
+  for (symbol in unique(symbols)) {
+
+    # if just one then skip
+    is.symbol <- which(symbols == symbol)
+    if (length(is.symbol) == 1) next()
+
+    symbol_logfcs <- logfc[is.symbol]
+    if (length(unique(sign(symbol_logfcs))) == 1) {
+      # keep gene
+      next()
+
+    } else {
+      # hide gene
+      exclude <- c(exclude, symbol)
+    }
+  }
+  return(exclude)
+}
+
+#' Resolve conflicts of logfc for multi-sample analyses
+#'
+#' @param symbols character vector of gene names
+#' @param exclude gene names to exclude
+#'
+#' @return boolean of length \code{unlist(symbols)}
+#' @export
+#' @keywords internal
+#'
+is_consistent <- function(symbols, exclude) {
+  !duplicated(symbols) & !symbols %in% exclude
 }
 
 #' Format forcegraph data.frames to JSON
