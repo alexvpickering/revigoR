@@ -35,23 +35,24 @@
 #' revigo_forcegraph(data_dir)
 #'
 revigo_forcegraph <- function(data_dir) {
+  # data prep
   xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
   data <- convert_xgmml(xgmml_path)
-  data <- append_forcegraph_annotations(data, data_dir)
+  go_merged <- get_merged_annotations(data_dir)
+  data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
   data <- adjust_forcegraph_colors(data)
 
   r2d3::r2d3(system.file("d3/forcegraph/forcegraph.js", package = 'revigoR'), data = data_to_json(data), d3_version = 4)
 }
 
-#' Add gene names, logfc values, and analysis indicator to forcegraph data
+#' Get merged gene names, logfc values, and analysis indicator
 #'
-#' Used internally by \link{revigo_forcegraph}
+#' Used internally by \link{revigo_forcegraph} and \code{revigo_scatterplot}
 #'
-#' @param data result of \code{\link{convert_xgmml}}
 #' @param data_dir directory with scraped revigo data
 #'
 #' @importFrom magrittr %>%
-#' @return \code{data} with columes merged_genes, logFC, and analysis, added to nodes data.frame
+#' @return \code{tibble} with columes merged_genes, logFC, analysis, and id
 #' @export
 #' @keywords internal
 #'
@@ -60,9 +61,9 @@ revigo_forcegraph <- function(data_dir) {
 #' scrape_revigo(data_dir, go_up1)
 #' xgmml_path <- file.path(data_dir, 'cytoscape_map.xgmml')
 #' data <- convert_xgmml(xgmml_path)
-#' data <- append_annotations(data, data_dir)
+#' data <- get_merged_annotations(data_dir)
 #'
-append_forcegraph_annotations <- function(data, data_dir) {
+get_merged_annotations <- function(data_dir) {
 
   # read original RDS with gene names/logfc values
   go_res <- readRDS(file.path(data_dir, 'go_res.rds'))
@@ -76,7 +77,14 @@ append_forcegraph_annotations <- function(data, data_dir) {
   if (is.null(go_res$analysis)) go_res$analysis <- 0
 
   # obtain revigo collapsed columns
-  revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1)
+  revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1, stringsAsFactors = FALSE, check.names = FALSE)
+
+  # label used by tooltip
+  revigo_res$label <- revigo_res$description
+
+  # remove leading zeros in GO:0 for joins
+  revigo_res$id <- gsub(':0+', ':', row.names(revigo_res))
+
   go_res$representative <- revigo_res[row.names(go_res), 'representative']
 
   # merge to unique genes and associated logfc within revigo groups
@@ -89,9 +97,9 @@ append_forcegraph_annotations <- function(data, data_dir) {
                      analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis))) %>%
     dplyr::select(-representative)
 
-  data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
+  go_merged <- dplyr::left_join(go_merged, revigo_res, by = 'id')
 
-  return(data)
+  return(go_merged)
 }
 
 #' Adjust forcegraph colors to compare multiple analyses

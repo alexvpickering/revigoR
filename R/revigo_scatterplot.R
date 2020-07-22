@@ -10,9 +10,9 @@
 #' data(go_up1)
 #' data_dir <- tempdir()
 #' scrape_revigo(data_dir, go_up1)
-#' revigo_scatterplot(data_dir)
+#' revigo_scatterplot_original(data_dir)
 #'
-revigo_scatterplot <- function(data_dir) {
+revigo_scatterplot_original <- function(data_dir) {
 
   # load revigo data
   revigo.data <- read.csv(file.path(data_dir, 'rsc.csv'), check.names = FALSE)
@@ -39,14 +39,48 @@ revigo_scatterplot <- function(data_dir) {
     ggplot2::scale_size(range=c(5, 30)) +
     ggplot2::theme_bw() +
     ggrepel::geom_label_repel(data = ex,
-                              min.segment.length = 0,label.size = 0, label.padding = 0,
-                              ggplot2::aes(plot_X, plot_Y, label = description), colour = I(ggplot2::alpha("black", 0.85)), size = 3) +
+                              min.segment.length = 0,
+                              label.size = 0,
+                              label.padding = 0,
+                              ggplot2::aes(plot_X, plot_Y, label = description), colour = I(ggplot2::alpha("black", 0.85)), size = 3, fill = "transparent") +
     ggplot2::labs (y = "Semantic Space X", x = "Semantic Space Y") +
     ggplot2::theme(legend.key = ggplot2::element_blank()) +
     ggplot2::xlim(min(revigo.data$plot_X)-one.x_range/10,max(revigo.data$plot_X)+one.x_range/10) +
     ggplot2::ylim(min(revigo.data$plot_Y)-one.y_range/10,max(revigo.data$plot_Y)+one.y_range/10)
 
   p1
+}
+
+#' Revigo MDS plot
+#'
+#' @param data_dir directory with scraped revigo data
+#'
+#' @return ggplot object
+#' @export
+#'
+#' @examples
+#'
+#'
+#' # single analysis
+#' data(go_up1)
+#' data_dir <- tempdir()
+#' scrape_revigo(data_dir, go_up1)
+#'
+#' # two analyses
+#' data(go_up2)
+#'
+#' go_up1$analysis <- 0
+#' go_up2$analysis <- 1
+#' go_up <- rbind(go_up1, go_up2)
+#' scrape_revigo(data_dir, go_up)
+#' revigo_scatterplot(data_dir)
+#'
+revigo_scatterplot <- function(data_dir) {
+
+  # load revigo data
+  data <- get_merged_annotations(data_dir)
+  r2d3::r2d3("inst/d3/scatterplot/scatterplot.js", data = data_to_json(data), d3_version = 4)
+
 }
 
 
