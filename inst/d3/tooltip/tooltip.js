@@ -51,7 +51,7 @@ var yUp = d3.scaleBand().padding(0.01);
 var yDown = d3.scaleBand().padding(0.01);
 
 // Build color scale
-var palette = d3.scaleLinear().range(["green", "white", "red"]);
+var palette = d3.scaleLinear().range(["blue", "white", "red"]);
 
 
 // Three function that change the tooltip when user hover / move / leave a cell

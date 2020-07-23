@@ -13,7 +13,7 @@ adjust_forcegraph_colors(data)
 \code{data} with colors adjusted.
 }
 \description{
-Nodes for single analyses get hue 240(blue) and 0(red).
+Nodes for single analyses get hue 30(orange) and 100(green).
 Nodes resulting from merged analyses get hue 275 (purple).
 Saturation and lightness stay the same to indicate significance.
 }

@@ -2,12 +2,12 @@
 #' Generate forcegraph plot of revigo GO graph
 #'
 #' If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
-#' merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (green)
+#' merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (blue)
 #' genes with the largest absolute logFC are displayed.
 #'
 #' If \code{scrape_revigo} is used with two analyses (see examples), revigo ontolgies where no merge occured
-#' across analyses will be shades of red and blue while ontologies where a merge occured across analyses
-#' will be shades of purple. For tooltip heatmaps with two analyses, any genes regulated in opposite directions
+#' across analyses will be shades of orange and green while ontologies where a merge occured across analyses
+#' will be shades of purple For tooltip heatmaps with two analyses, any genes regulated in opposite directions
 #' are excluded.
 #'
 #' @inheritParams scrape_revigo
@@ -41,6 +41,7 @@ revigo_forcegraph <- function(data_dir) {
   data <- convert_xgmml(xgmml_path)
   go_merged <- get_merged_annotations(data_dir)
   data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
+  data$nodes$label <- data$nodes$label.x
   data <- adjust_forcegraph_colors(data)
 
   r2d3::r2d3(
@@ -54,7 +55,7 @@ revigo_forcegraph <- function(data_dir) {
 
 #' Adjust forcegraph colors to compare multiple analyses
 #'
-#' Nodes for single analyses get hue 240(blue) and 0(red).
+#' Nodes for single analyses get hue 30(orange) and 100(green).
 #' Nodes resulting from merged analyses get hue 275 (purple).
 #' Saturation and lightness stay the same to indicate significance.
 #'
@@ -71,8 +72,8 @@ adjust_forcegraph_colors <- function(data) {
 
   cols <- plotwidgets::col2hsl(cols)
   cols['H', ] <- sapply(anals, function(anal) {
-    if (anal == 0) return(0)
-    else if (anal == 1) return(240)
+    if (anal == 0) return(30)
+    else if (anal == 1) return(100)
     else if (anal == 2) return(275)
   })
 

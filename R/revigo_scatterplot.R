@@ -54,12 +54,12 @@ revigo_scatterplot_original <- function(data_dir) {
 #' Revigo MDS plot
 #'
 #' If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
-#' merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (green)
+#' merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (blue)
 #' genes with the largest absolute logFC are displayed.
 #'
 #' If \code{scrape_revigo} is used with two analyses (see examples), revigo ontolgies where no merge occured
 #' across analyses will be shades of red and blue while ontologies where a merge occured across analyses
-#' will be shades of purple. For tooltip heatmaps with two analyses, any genes regulated in opposite directions
+#' will be shades of pink For tooltip heatmaps with two analyses, any genes regulated in opposite directions
 #'  are excluded.
 #'
 #' @param data_dir directory with scraped revigo data

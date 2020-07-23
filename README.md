@@ -34,7 +34,7 @@ revigo_scatterplot(data_dir)
 
 ### Two GO Analyses
 
-Visualize where revigo merges terms across two GO analyses (shades of purple) and doesn't (shades of red and blue for each analysis respectively):
+Visualize where revigo merges terms across two GO analyses (shades of purple) and doesn't (shades of orange and green for each analysis respectively):
 
 ```R
 # two analyses

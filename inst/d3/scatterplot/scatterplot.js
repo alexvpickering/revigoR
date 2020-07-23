@@ -23,10 +23,18 @@ r2d3.onRender(function(data, svg, width, height, options) {
 
   // setup fill color
   var cValue = function(d) { return -d["log10 p-value"];};
-  var extent = d3.extent(data.map(cValue));
-  var palettes = [d3.scaleLinear().domain([extent[0],extent[1]]).range(["#FFF5F0", "#EF3B2C"]),
-                  d3.scaleLinear().domain([extent[0],extent[1]]).range(["#F7FBFF", "#2171B5"]),
-                  d3.scaleLinear().domain([extent[0],extent[1]]).range(["#FCFBFD", "#6A51A3"])];
+  var extents = [
+    d3.extent(data.filter((d) => d.analysis === 0).map(cValue)),
+    d3.extent(data.filter((d) => d.analysis === 1).map(cValue)),
+    d3.extent(data.filter((d) => d.analysis === 2).map(cValue))
+    ];
+
+  var palettes = [
+    d3.scaleLinear().domain(extents[0]).range(["#FFEEDD", "#FF9933"]),
+    d3.scaleLinear().domain(extents[1]).range(["#E7FFDB", "#55FF00"]),
+    d3.scaleLinear().domain(extents[2]).range(["#E7C6FF", "#9500FF"]),
+    ];
+
   var myColor = function(d) {
     let anal = d.analysis ? d.analysis : 0;
     return palettes[anal](cValue(d));
@@ -85,7 +93,7 @@ r2d3.onRender(function(data, svg, width, height, options) {
       .data(data)
     .enter().append("circle")
       .attr("class", "dot")
-      .attr("r", 6)
+      .attr("r", 5)
       .attr("cx", xMap)
       .attr("cy", yMap)
       .style("fill", function(d) { return myColor(d);})
