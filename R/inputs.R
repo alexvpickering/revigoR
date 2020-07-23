@@ -47,6 +47,29 @@ get_gslist.go <- function(species = 'Hs') {
   return(gslist)
 }
 
+#' Get names of gene set
+#'
+#' @param gslist result of \code{\link{get_gslist}}
+#' @param type either 'go' or 'kegg'
+#' @param species species identifier
+#' @param gs_dir Directory to save results to
+#'
+#' @return Description of \code{gslist} gene sets
+#' @export
+#'
+#' @examples
+#' gslist.go <- get_gslist.go()
+#' gs.names.go <- get_gs.names.go(gslist.go)
+#'
+get_gs.names.go <- function(gslist.go, species = 'Hs') {
+
+  GOID <- names(gslist.go)
+  TERM <- suppressMessages(AnnotationDbi::select(GO.db::GO.db,keys=GOID,columns="TERM"))
+  gs.names.go <- TERM$TERM
+  names(gs.names.go) <- TERM$GOID
+  return(gs.names.go)
+}
+
 #' Add Gene Names and logFC Values to goana Result
 #'
 #' Used to add gene name and logfc values to goana result prior to \code{\link{scrape_revigo}}. Allows \code{\link{r2d3_forcegraph}}
