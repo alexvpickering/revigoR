@@ -3,10 +3,10 @@ var tooltip = d3.select("body")
   .append("div")
     .style("position", "absolute")
     .style("pointer-events", "none")
+    .style("background-color", "rgba(255,255,255,0.75)")
     .style("opacity", 0)
     .style("width", "250px")
     .attr("class", "tooltip")
-    .style("background", "white")
     .style("border-radius", "0px")
     .style("border", "1px solid #ddd")
     .style("box-shadow", "2px 2px 5px 0px rgba(0,0,0,0.1)");
@@ -63,7 +63,7 @@ var mouseover = function(d) {
   // show the tooltip
   tooltip
     .style("display", "block")
-    .style("opacity", 0.8)
+    .style("opacity", 1);
   d3.select(this)
     .style("stroke", "black")
     .style("opacity", 1);
@@ -95,7 +95,7 @@ var mouseover = function(d) {
 
   // only show genes upregulated in current analysis (analysis 0 if point is merged)
   var anal = d.analysis === 2 ? 0 : d.analysis;
-  var twoanals = geneData[1].length === 2;
+  var twoanals = geneData[1].length;
   var genesUpAnal = geneData[anal].filter(item => item.logfc > 0).map(item => item.gene);
   var genesDownAnal = geneData[anal].filter(item => item.logfc <= 0).map(item => item.gene);
 

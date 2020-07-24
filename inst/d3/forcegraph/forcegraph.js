@@ -1,4 +1,4 @@
-// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/go_up2.json"), d3_version = 4, dependencies = "inst/d3/tooltip/tooltip.js"
+// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/merged.json"), d3_version = 4, dependencies = "inst/d3/tooltip/tooltip.js"
 // Based on: https://bl.ocks.org/mbostock/4063570
 
 var radius = 5;
