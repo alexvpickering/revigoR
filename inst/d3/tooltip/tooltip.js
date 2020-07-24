@@ -60,6 +60,15 @@ var palette = d3.scaleLinear().range(["blue", "white", "red"]);
 
 // Three function that change the tooltip when user hover / move / leave a cell
 var mouseover = function(d) {
+
+  // clear previous heatmap
+  svgHeatUpG.selectAll("rect").remove();
+  svgHeatDownG.selectAll("rect").remove();
+  yAxisUp.selectAll("*").remove();
+  yAxisDown.selectAll("*").remove();
+  xAxisUp.selectAll("*").remove();
+  xAxisDown.selectAll("*").remove();
+
   // show the tooltip
   tooltip
     .style("display", "block")
@@ -174,8 +183,6 @@ var mouseover = function(d) {
   if (twoanals && yUp.bandwidth()) xAxisUp.call(d3.axisTop(xUp).tickSizeOuter(0));
   if (twoanals && yDown.bandwidth()) xAxisDown.call(d3.axisTop(xDown).tickSizeOuter(0));
 
-  svgHeatUpG.selectAll("rect").remove();
-  svgHeatDownG.selectAll("rect").remove();
 
   svgHeatUpG.selectAll()
       .data(geneDataUp, function(d) {return d.gene;})

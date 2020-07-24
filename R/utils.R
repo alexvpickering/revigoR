@@ -124,7 +124,7 @@ unnameunlist <- function(x) {
 #'
 data_to_json <- function(data) {
   jsonlite::toJSON(data,
-                   dataframe = "rows", null = "null", na = "null", auto_unbox = TRUE,
+                   dataframe = "rows", null = "null", na = "null", auto_unbox = FALSE,
                    digits = getOption("shiny.json.digits", 16), use_signif = TRUE, force = TRUE,
                    POSIXt = "ISO8601", UTC = TRUE, rownames = FALSE, keep_vec_names = TRUE,
                    json_verabitm = TRUE
