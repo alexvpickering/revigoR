@@ -4,7 +4,7 @@ var tooltip = d3.select("body")
     .style("position", "absolute")
     .style("pointer-events", "none")
     .style("opacity", 0)
-    .style("width", "200px")
+    .style("width", "250px")
     .attr("class", "tooltip")
     .style("background", "white")
     .style("border-radius", "0px")
@@ -17,8 +17,8 @@ var tooltipTitle = tooltip
 
 
 // containers for heatmap and its x-axis
-var margin = {top: 10, right: 10, bottom: 10, left: 70},
-heatWidth = 100 - margin.left - margin.right;
+var margin = {top: 20, right: 10, bottom: 10, left: 70},
+heatWidth = 120 - margin.left - margin.right;
 
 svgHeatUp = tooltip
 .append("svg")
@@ -40,15 +40,19 @@ svgHeatUpG = svgHeatUp
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
-yAxisUp = svgHeatUpG
-  .append("g");
+yAxisUp = svgHeatUpG.append("g");
+xAxisUp = svgHeatUpG.append("g");
 
-yAxisDown = svgHeatDownG
-  .append("g");
+yAxisDown = svgHeatDownG.append("g");
+xAxisDown = svgHeatDownG.append("g");
 
 // Build Y scales and axis:
 var yUp = d3.scaleBand().padding(0.01);
 var yDown = d3.scaleBand().padding(0.01);
+
+// Build X scales and axis:
+var xUp = d3.scaleBand().padding(0);
+var xDown = d3.scaleBand().padding(0);
 
 // Build color scale
 var palette = d3.scaleLinear().range(["blue", "white", "red"]);
@@ -62,72 +66,136 @@ var mouseover = function(d) {
     .style("opacity", 0.8)
   d3.select(this)
     .style("stroke", "black")
-    .style("opacity", 1)
+    .style("opacity", 1);
 
   // add GO name to tooltip
   tooltipTitle.html(d.description);
 
   // format the heatmap data
-  var geneData = d.merged_genes.map((item, i) => {
-    return {'group': item, 'value': d.logFC[i]};
-    });
+
+  // genes that are common between both analyses
+  var common = d.genes0.filter(gene => d.genes1.includes(gene));
+
+  // data for analysis 0 and 1
+  var geneData = [
+    d.genes0.map((gene, i) =>  ({
+      'gene': gene,
+      'logfc': d.logFC0[i],
+      'analysis': 0,
+      'common': common.includes(gene)
+    })),
+
+    d.genes1.map((gene, i) =>  ({
+      'gene': gene,
+      'logfc': d.logFC1[i],
+      'analysis': 1,
+      'common': common.includes(gene)
+    }))
+  ];
+
+  // only show genes upregulated in current analysis (analysis 0 if point is merged)
+  var anal = d.analysis === 2 ? 0 : d.analysis;
+  var twoanals = geneData[1].length === 2;
+  var genesUpAnal = geneData[anal].filter(item => item.logfc > 0).map(item => item.gene);
+  var genesDownAnal = geneData[anal].filter(item => item.logfc <= 0).map(item => item.gene);
 
   // 70 up or down genes is most that is practical to fit
+  // so prefer genes that are common to analysis 0 and 1
+  var compareUp = function(a, b) {
+    // sort gene that is common upwards
+    if (a.common & !b.common) return -1;
+    else if (b.common & !a.common) return 1;
+    else return b.logfc - a.logfc;
+  };
+
+  var compareDown = function(a, b) {
+    if (a.common & !b.common) return -1;
+    else if (b.common & !a.common) return 1;
+    else return a.logfc - b.logfc;
+  };
+
+  geneData = [...geneData[0], ...geneData[1]];
+
   var geneDataUp = geneData
-    .filter(item => item.value > 0)
-    .filter((item, idx) => idx < 70)
-    .sort((a,b) => a.value - b.value);
+    .filter(item => genesUpAnal.includes(item.gene))
+    .sort(compareUp);
+
+  var first70Up = geneDataUp
+    .map(item => item.gene)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .filter((v, i) => i < 70);
+
+  geneDataUp = geneDataUp.filter(item => first70Up.includes(item.gene));
 
   var geneDataDown = geneData
-    .filter(item => item.value <= 0)
-    .filter((item, idx) => idx < 70)
-    .sort((a,b) => b.value - a.value);
+    .filter(item => genesDownAnal.includes(item.gene))
+    .sort(compareDown);
+
+  var first70Down = geneDataDown
+    .map(item => item.gene)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .filter((v, i) => i < 70);
+
+  geneDataDown = geneDataDown.filter(item => first70Down.includes(item.gene));
 
   // extent of logfc values
-  var extent = d3.extent(geneData, d => d.value);
+  var extent = d3.extent([...geneDataUp, ...geneDataDown], d => d.logfc);
   palette.domain([extent[0], 0, extent[1]]);
 
-  // update the y axis domain and redraw
-  var groupsUp = geneDataUp.map(item => item.group);
-  var groupsDown = geneDataDown.map(item => item.group);
+  // update the y axis domain ad redraw
+  var genesUp = geneDataUp
+    .filter(item => item.analysis === anal)
+    .sort((a,b) => b.logfc - a.logfc)
+    .map(item => item.gene);
+
+  var genesDown = geneDataDown
+    .filter(item => item.analysis === anal)
+    .sort((a,b) => a.logfc - b.logfc)
+    .map(item => item.gene);
 
   // height of tooltip svg
   var maxHeatHeight = window.innerHeight - tooltipTitle.node().getBoundingClientRect().height;
-  var heatHeightUp = (groupsUp.length*18) + margin.top + margin.bottom;
-  var heatHeightDown = (groupsDown.length*18) + margin.top + margin.bottom;
+  var heatHeightUp = (genesUp.length*18) + margin.top + margin.bottom;
+  var heatHeightDown = (genesDown.length*18) + margin.top + margin.bottom;
   heatHeightUp = Math.min(maxHeatHeight, heatHeightUp);
   heatHeightDown = Math.min(maxHeatHeight, heatHeightDown);
   svgHeatUp.attr("height", heatHeightUp)
   svgHeatDown.attr("height", heatHeightDown)
 
-  yUp.domain(groupsUp).range([ heatHeightUp-margin.top-margin.bottom, 0 ])
-  yDown.domain(groupsDown).range([ heatHeightDown-margin.top-margin.bottom, 0 ])
+  yUp.domain(genesUp).range([ 0, heatHeightUp-margin.top-margin.bottom ]);
+  yDown.domain(genesDown).range([ 0, heatHeightDown-margin.top-margin.bottom]);
 
-  yAxisUp.call(d3.axisLeft(yUp).tickSizeOuter(0))
-  yAxisDown.call(d3.axisLeft(yDown).tickSizeOuter(0))
+  xUp.domain([0, 1]).range([0, yUp.bandwidth()*2]);
+  xDown.domain([0, 1]).range([0, yDown.bandwidth()*2]);
 
-  svgHeatUpG.selectAll("rect").remove()
-  svgHeatDownG.selectAll("rect").remove()
+  yAxisUp.call(d3.axisLeft(yUp).tickSizeOuter(0));
+  yAxisDown.call(d3.axisLeft(yDown).tickSizeOuter(0));
+
+  if (twoanals && yUp.bandwidth()) xAxisUp.call(d3.axisTop(xUp).tickSizeOuter(0));
+  if (twoanals && yDown.bandwidth()) xAxisDown.call(d3.axisTop(xDown).tickSizeOuter(0));
+
+  svgHeatUpG.selectAll("rect").remove();
+  svgHeatDownG.selectAll("rect").remove();
 
   svgHeatUpG.selectAll()
-      .data(geneDataUp, function(d) {return d.group;})
+      .data(geneDataUp, function(d) {return d.gene;})
       .enter()
       .append("rect")
-      .attr("x", function(d) { return 1 })
-      .attr("y", function(d) { return yUp(d.group) })
+      .attr("x", function(d) { return xUp(d.analysis) + 1})
+      .attr("y", function(d) { return yUp(d.gene) + 1 })
       .attr("width", yUp.bandwidth() )
       .attr("height", yUp.bandwidth() )
-      .style("fill", function(d) { return palette(d.value)} )
+      .style("fill", function(d) { return palette(d.logfc)} );
 
   svgHeatDownG.selectAll()
-      .data(geneDataDown, function(d) {return d.group;})
+      .data(geneDataDown, function(d) {return d.gene;})
       .enter()
       .append("rect")
-      .attr("x", function(d) { return 1 })
-      .attr("y", function(d) { return yDown(d.group) })
+      .attr("x", function(d) { return xDown(d.analysis) + 1 })
+      .attr("y", function(d) { return yDown(d.gene) + 1 })
       .attr("width", yDown.bandwidth() )
       .attr("height", yDown.bandwidth() )
-      .style("fill", function(d) { return palette(d.value)} )
+      .style("fill", function(d) { return palette(d.logfc)} );
 
   };
 
@@ -135,7 +203,7 @@ var mousemove = function(d) {
 
   // if position from top and half height are more than window height, move up
   let visibleHeight = window.innerHeight;
-  let visibleWidth = window.innerHeight;
+  let visibleWidth = window.innerWidth;
   let mousetop = d3.event.pageY;
   let mouseright = d3.event.pageX;
   let tooltipBB = tooltip.node().getBoundingClientRect();

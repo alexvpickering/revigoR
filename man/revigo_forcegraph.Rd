@@ -13,15 +13,17 @@ revigo_forcegraph(data_dir)
 r2d3 plot
 }
 \description{
-If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
-merged into the the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (blue)
-genes with the largest absolute logFC are displayed.
+Forcegraph uses nodes and links from cytoscape map file.
 }
 \details{
+If \link{add_path_genes} is called, hovering a node will show the logFC of significant genes in all GO terms
+merged into the representative GO term in question. At most 70 upregulated (red) and 70 downregulated (blue)
+genes with the largest absolute logFC are displayed.
 If \code{scrape_revigo} is used with two analyses (see examples), revigo ontolgies where no merge occured
-across analyses will be shades of orange and green while ontologies where a merge occured across analyses
-will be shades of purple For tooltip heatmaps with two analyses, any genes regulated in opposite directions
-are excluded.
+across analyses will be shades of orange (\code{analysis 0}) and green (\code{analysis 1}) while ontologies where a merge occured across analyses
+will be shades of purple. For tooltip heatmaps with two analyses, the 70 up-regulated genes shown are up
+in the analysis of the hovered node (analysis 0 for merged nodes), prioritizing the inclusion of genes differentially
+expressed in both analyses. The 70 down-regulated genes shown are chosen similarly.
 }
 \examples{
 
