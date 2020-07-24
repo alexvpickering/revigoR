@@ -27,9 +27,9 @@ are excluded.
 
 # single analysis
 data(go_up2)
-data_dir <- tempdir()
-scrape_revigo(data_dir, go_up2)
-revigo_forcegraph(data_dir)
+data_dir1 <- tempdir()
+scrape_revigo(data_dir1, go_up2)
+revigo_forcegraph(data_dir1)
 
 # two analyses
 data(go_up1)
@@ -37,9 +37,9 @@ go_up1$analysis <- 0
 go_up2$analysis <- 1
 go_up <- rbind(go_up1, go_up2)
 
-data_dir <- tempdir()
-scrape_revigo(data_dir, go_up)
-revigo_forcegraph(data_dir)
+data_dir2 <- tempdir()
+scrape_revigo(data_dir2, go_up)
+revigo_forcegraph(data_dir2)
 
 }
 \seealso{

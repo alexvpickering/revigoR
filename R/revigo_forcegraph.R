@@ -21,9 +21,9 @@
 #'
 #' # single analysis
 #' data(go_up2)
-#' data_dir <- tempdir()
-#' scrape_revigo(data_dir, go_up2)
-#' revigo_forcegraph(data_dir)
+#' data_dir1 <- tempdir()
+#' scrape_revigo(data_dir1, go_up2)
+#' revigo_forcegraph(data_dir1)
 #'
 #' # two analyses
 #' data(go_up1)
@@ -31,9 +31,9 @@
 #' go_up2$analysis <- 1
 #' go_up <- rbind(go_up1, go_up2)
 #'
-#' data_dir <- tempdir()
-#' scrape_revigo(data_dir, go_up)
-#' revigo_forcegraph(data_dir)
+#' data_dir2 <- tempdir()
+#' scrape_revigo(data_dir2, go_up)
+#' revigo_forcegraph(data_dir2)
 #'
 revigo_forcegraph <- function(data_dir) {
   # data prep
@@ -42,7 +42,13 @@ revigo_forcegraph <- function(data_dir) {
   go_merged <- get_merged_annotations(data_dir)
   data$nodes <- dplyr::left_join(data$nodes, go_merged, by = 'id')
   data$nodes$label <- data$nodes$label.x
-  data <- adjust_forcegraph_colors(data)
+
+  # NA analysis
+  # TODO: figure out why
+  remove_nodes <- data$nodes$id[is.na(data$nodes$analysis)]
+  data$nodes <- data$nodes[!data$nodes$id %in% remove_nodes, ]
+  data$links <- data$links[!data$links$source %in% remove_nodes, ]
+  data$links <- data$links[!data$links$target %in% remove_nodes, ]
 
   r2d3::r2d3(
     system.file("d3/forcegraph/forcegraph.js", package = 'revigoR'),
@@ -50,37 +56,6 @@ revigo_forcegraph <- function(data_dir) {
     dependencies = system.file("d3/tooltip/tooltip.js", package = 'revigoR'),
     d3_version = 4
   )
-
-}
-
-#' Adjust forcegraph colors to compare multiple analyses
-#'
-#' Nodes for single analyses get hue 30(orange) and 100(green).
-#' Nodes resulting from merged analyses get hue 275 (purple).
-#' Saturation and lightness stay the same to indicate significance.
-#'
-#' @param data result of \code{append_forcegraph_annotations}
-#'
-#' @return \code{data} with colors adjusted.
-#' @export
-#' @keywords internal
-#'
-adjust_forcegraph_colors <- function(data) {
-
-  cols <- data$nodes$fill
-  anals <- data$nodes$analysis
-
-  cols <- plotwidgets::col2hsl(cols)
-  cols['H', ] <- sapply(anals, function(anal) {
-    if (anal == 0) return(30)
-    else if (anal == 1) return(100)
-    else if (anal == 2) return(275)
-  })
-
-  # convert back to hex
-  data$nodes$fill <- plotwidgets::hsl2col(cols)
-
-  return(data)
 
 }
 

@@ -65,7 +65,7 @@ var mouseover = function(d) {
     .style("opacity", 1)
 
   // add GO name to tooltip
-  tooltipTitle.html(d.label);
+  tooltipTitle.html(d.description);
 
   // format the heatmap data
   var geneData = d.merged_genes.map((item, i) => {

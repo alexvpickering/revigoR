@@ -1,4 +1,4 @@
-// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/go_up1.json"), d3_version = 4, dependencies = "inst/d3/tooltip/tooltip.js"
+// !preview r2d3 data = jsonlite::read_json("inst/d3/forcegraph/merged.json"), d3_version = 4, dependencies = "inst/d3/tooltip/tooltip.js"
 // Based on: https://bl.ocks.org/mbostock/4063570
 
 var radius = 5;
@@ -9,6 +9,26 @@ var simulation = d3.forceSimulation()
 .force("center", d3.forceCenter(width / 2, height / 2));
 
 r2d3.onRender(function(graph, svg, width, height, options) {
+
+  // setup fill color
+  var cValue = function(d) { return -d["log10 p-value"];};
+  var extents = [
+    d3.extent(graph.nodes.filter((d) => d.analysis === 0).map(cValue)),
+    d3.extent(graph.nodes.filter((d) => d.analysis === 1).map(cValue)),
+    d3.extent(graph.nodes.filter((d) => d.analysis === 2).map(cValue))
+    ];
+
+  var palettes = [
+    d3.scaleLinear().domain(extents[0]).range(["#FFEEDD", "#FF9933"]),
+    d3.scaleLinear().domain(extents[1]).range(["#E7FFDB", "#55FF00"]),
+    d3.scaleLinear().domain(extents[2]).range(["#E7C6FF", "#9500FF"]),
+    ];
+
+  var myColor = function(d) {
+    let anal = d.analysis ? d.analysis : 0;
+    return palettes[anal](cValue(d));
+  };
+
 
   var link = svg.append("g")
   .attr("class", "links")
@@ -23,7 +43,7 @@ r2d3.onRender(function(graph, svg, width, height, options) {
   .data(graph.nodes)
   .enter().append("circle")
   .attr("r", radius)
-  .attr("fill", function(d) { return d.fill; })
+  .attr("fill", myColor)
   .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)

@@ -24,36 +24,45 @@ get_merged_annotations <- function(data_dir) {
   if (!all(c('SYMBOL', 'logFC') %in% colnames(go_res)))
     stop("go_res supplied to scrape_revigo lacked columns 'SYMBOL' and/or 'logFC'")
 
-  if (length(unique(go_res$analysis)) > 2)
+  num_anals <- length(unique(go_res$analysis))
+  if (num_anals > 2)
     stop("go_res supplied to scrape_revigo has more than two unique analyses")
 
-  if (is.null(go_res$analysis)) go_res$analysis <- 0
+  if (num_anals == 0) go_res$analysis <- 0
 
   # some revigo GO ids absent because of version differences in GO
   revigo_res <- read.csv(file.path(data_dir, 'rsc.csv'), row.names = 1, stringsAsFactors = FALSE, check.names = FALSE)
   go_res <- go_res[row.names(revigo_res), ]
 
-
-  # label used by tooltip
-  revigo_res$label <- revigo_res$description
+  # remove na logfc
+  rm.logfc <- sapply(go_res$logFC, function(x) is.null(x))
+  go_res <- go_res[!rm.logfc, ]
+  revigo_res <- revigo_res[!rm.logfc, ]
 
   # remove leading zeros in GO:0 for joins
   revigo_res$id <- gsub(':0+', ':', row.names(revigo_res))
 
   go_res$representative <- revigo_res$representative
 
-  # get genes where inconsistent logFC (occurs with two analyses)
-  exclude <- get_inconsistent_genes(unnameunlist(go_res$SYMBOL),
-                                    unnameunlist(go_res$logFC))
+  # get genes where inconsistent logFC (occurs when terms merged between two analyses)
+  if (num_anals == 0) {
+    exclude <- NULL
+
+  } else {
+    is.merged <- go_res$analysis == 2
+    exclude <- get_inconsistent_genes(unnameunlist(go_res[is.merged, 'SYMBOL']),
+                                      unnameunlist(go_res[is.merged, 'logFC']))
+
+  }
 
   # merge to unique genes and associated logfc within revigo groups
   # if two analyses merge set analysis indicator to 2
   go_merged <- go_res %>%
     dplyr::group_by(representative) %>%
-    dplyr::summarize(merged_genes = summarize_genes(SYMBOL, exclude),
-                     logFC = summarize_logfc(SYMBOL, logFC, exclude),
-                     id = paste0('GO:', unique(representative)),
-                     analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis)), .groups = 'drop') %>%
+    dplyr::summarize(analysis = ifelse(length(unique(analysis)) == 2, 2, unique(analysis)),
+                     merged_genes = summarize_genes(SYMBOL, exclude, analysis),
+                     logFC = summarize_logfc(SYMBOL, logFC, exclude, analysis),
+                     id = paste0('GO:', unique(representative)), .groups = 'drop') %>%
     dplyr::select(-representative)
 
   go_merged <- dplyr::left_join(go_merged, revigo_res, by = 'id')
@@ -61,33 +70,45 @@ get_merged_annotations <- function(data_dir) {
   return(go_merged)
 }
 
-summarize_genes <- function(SYMBOL, exclude) {
+summarize_genes <- function(SYMBOL, exclude, analysis) {
   symbols <- unnameunlist(SYMBOL)
-  symbols <- symbols[!duplicated(symbols) & !symbols %in% exclude]
+  symbols <- symbols[!duplicated(symbols)]
+
+  if (analysis == 2 && length(exclude))
+    symbols <- symbols[!symbols %in% exclude]
+
   return(list(symbols))
 }
 
-summarize_logfc <- function(SYMBOL, logFC, exclude) {
-  # remove excluded
-  df <- dplyr::tibble(SYMBOL = unnameunlist(SYMBOL),
-                      logFC = unnameunlist(logFC)) %>%
-    dplyr::filter(!SYMBOL %in% exclude)
+summarize_logfc <- function(SYMBOL, logFC, exclude, analysis) {
 
-  # summarize rest with mean
-  means <- df %>%
-    dplyr::group_by(SYMBOL) %>%
-    dplyr::summarize(SYMBOL = SYMBOL[1],
-                     logFC = mean(unique(logFC)), .groups = 'drop')
+  logfc <- unnameunlist(logFC)
+  symbols <- unnameunlist(SYMBOL)
 
-  # extract logfcs in same order as summarize_genes
-  logfc <- df %>%
-    dplyr::select(SYMBOL) %>%
-    dplyr::distinct() %>%
-    dplyr::left_join(means, by = 'SYMBOL') %>%
-    dplyr::pull(logFC)
+  if (analysis != 2) {
+    logfc <- logfc[!duplicated(symbols)]
+
+  } else {
+
+    # remove excluded
+    df <- dplyr::tibble(SYMBOL = symbols, logFC = logfc) %>%
+      dplyr::filter(!SYMBOL %in% exclude)
+
+    # summarize rest with mean
+    means <- df %>%
+      dplyr::group_by(SYMBOL) %>%
+      dplyr::summarize(SYMBOL = SYMBOL[1],
+                       logFC = mean(unique(logFC)), .groups = 'drop')
+
+    # extract logfcs in same order as summarize_genes
+    logfc <- df %>%
+      dplyr::select(SYMBOL) %>%
+      dplyr::distinct() %>%
+      dplyr::left_join(means, by = 'SYMBOL') %>%
+      dplyr::pull(logFC)
+  }
 
   return(list(logfc))
-
 }
 
 unnameunlist <- function(x) {
