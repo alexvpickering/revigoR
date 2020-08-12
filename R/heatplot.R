@@ -28,6 +28,7 @@ heatplot <- function(path_res) {
   geneSets <- path_res$SYMBOL
   names(geneSets) <- row.names(path_res)
   d <- list2df(geneSets)
+  d$categoryID <- factor(d$categoryID, levels = rev(unique(d$categoryID)))
 
   if (!is.null(foldChange)) {
     d$foldChange <- foldChange[d[,2]]
@@ -50,8 +51,7 @@ heatplot <- function(path_res) {
   p + ggplot2::xlab(NULL) +
     ggplot2::ylab(NULL) +
     ggplot2::theme_linedraw() +
-    ggplot2::theme(axis.text.x=ggplot2::element_text(angle = 90, hjust = 1, size = 8),
-                   panel.grid = ggplot2::element_blank())
+    ggplot2::theme(axis.text.x=ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8))
 }
 
 extract_geneSets <- function(path_res) {
