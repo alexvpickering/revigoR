@@ -9,6 +9,6 @@ setup_env <- function() {
 
   reticulate::virtualenv_create('revigo')
   reticulate::virtualenv_install(envname = 'revigo',
-                                 packages = c('Hnumpy', 'werkzeug', 'robobrowser'),
+                                 packages = c('numpy', 'werkzeug', 'robobrowser'),
                                  ignore_installed = TRUE)
 }
